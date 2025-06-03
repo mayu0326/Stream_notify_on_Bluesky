@@ -19,11 +19,11 @@
 当該項目(抜粋)
 
 ```
-
 # --- トンネル関連設定 ---
 # Cloudflare Tunnelなどのトンネルを起動するコマンド 
 # 設定しない場合はトンネルを起動しません。
 TUNNEL_SERVICE=none
+DISABLE_TUNNEL_AUTOSTART=false
 TUNNEL_CMD=
 TUNNEL_NAME=
 CLOUDFLARE_TEMP_CMD=
