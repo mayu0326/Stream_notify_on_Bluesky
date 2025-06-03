@@ -178,7 +178,7 @@ class TunnelConnection(ctk.CTkFrame):
                         "# Cloudflare Tunnelなどのトンネルを起動するコマンド \n",
                         "# 設定しない場合はトンネルを起動しません。\n",
                         "TUNNEL_SERVICE=none\n",
-                        "DISABLE_TUNNEL_AUTOSTART=true\n",
+                        "DISABLE_TUNNEL_AUTOSTART=false\n",
                         "TUNNEL_CMD=\n",
                         "TUNNEL_NAME=\n",
                         "CLOUDFLARE_TEMP_CMD=\n",
