@@ -200,7 +200,8 @@ class TunnelConnection(ctk.CTkFrame):
                         "TUNNEL_SERVICE", "TUNNEL_CMD", "TUNNEL_NAME",
                         "CLOUDFLARE_TEMP_CMD", "CLOUDFLARE_TEMP_PORT",
                         "NGROK_CMD", "NGROK_PORT", "NGROK_PROTOCOL",
-                        "LOCALTUNNEL_PORT", "LOCALTUNNEL_CMD", "CUSTOM_TUNNEL_CMD"
+                        "LOCALTUNNEL_PORT", "LOCALTUNNEL_CMD", "CUSTOM_TUNNEL_CMD",
+                        "DISABLE_TUNNEL_AUTOSTART"
                     ]
                     new_lines = []
                     for line in lines:
