@@ -166,16 +166,54 @@ class TunnelConnection(ctk.CTkFrame):
         elif service == "none":
             frame = ctk.CTkFrame(self.dynamic_area)
             frame.pack(expand=True, fill="both")
-            label_explain = ctk.CTkLabel(frame, text="トンネル関連設定を初期化するには下記のボタンを押してください", font=DEFAULT_FONT)
+            label_explain = ctk.CTkLabel(frame, text="トンネル関連設定を初期化するには下記のボタンを押してください\n（ラベルは消えません）", font=DEFAULT_FONT)
             label_explain.pack(pady=(30, 20), anchor="center")
-            def on_remove_tunnel_settings():
+            def on_reset_tunnel_settings():
                 from tkinter import messagebox
-                result = messagebox.askyesno("確認", "トンネル関連設定を本当に削除しますか？\nこの操作は元に戻せません。", icon='warning')
+                result = messagebox.askyesno("確認", "トンネル関連設定を本来の初期値で再生成しますか？\nこの操作は元に戻せません。", icon='warning')
                 if result:
-                    remove_tunnel_settings(env_path)
-                    messagebox.showinfo("削除完了", "トンネル関連設定を削除しました。")
+                    # トンネル関連設定を初期値で再生成
+                    tunnel_init = [
+                        "# --- トンネル関連設定 ---\n",
+                        "# Cloudflare Tunnelなどのトンネルを起動するコマンド \n",
+                        "# 設定しない場合はトンネルを起動しません。\n",
+                        "TUNNEL_SERVICE=none\n",
+                        "TUNNEL_CMD=\n",
+                        "TUNNEL_NAME=\n",
+                        "CLOUDFLARE_TEMP_CMD=\n",
+                        "CLOUDFLARE_TEMP_PORT=\n",
+                        "NGROK_CMD=\n",
+                        "NGROK_PORT=\n",
+                        "NGROK_PROTOCOL=\n",
+                        "LOCALTUNNEL_PORT=\n",
+                        "LOCALTUNNEL_CMD=\n",
+                        "CUSTOM_TUNNEL_CMD=\n"
+                    ]
+                    # settings.envの既存内容を読み込み、トンネル関連以外を残す
+                    lines = []
+                    if os.path.exists(env_path):
+                        with open(env_path, "r", encoding="utf-8") as f:
+                            lines = f.readlines()
+                    # トンネル関連以外を残す
+                    tunnel_keys = [
+                        "TUNNEL_SERVICE", "TUNNEL_CMD", "TUNNEL_NAME",
+                        "CLOUDFLARE_TEMP_CMD", "CLOUDFLARE_TEMP_PORT",
+                        "NGROK_CMD", "NGROK_PORT", "NGROK_PROTOCOL",
+                        "LOCALTUNNEL_PORT", "LOCALTUNNEL_CMD", "CUSTOM_TUNNEL_CMD"
+                    ]
+                    new_lines = []
+                    for line in lines:
+                        key = line.split("=", 1)[0].strip()
+                        if key not in tunnel_keys and not line.strip().startswith("# --- トンネル関連設定 ---"):
+                            new_lines.append(line)
+                    # 末尾に初期化内容を追加
+                    new_lines.append("\n")
+                    new_lines.extend(tunnel_init)
+                    with open(env_path, "w", encoding="utf-8") as f:
+                        f.writelines(new_lines)
+                    messagebox.showinfo("初期化完了", "トンネル関連設定を初期値で再生成しました。\n\nsettings.envを確認してください。")
             btn = ctk.CTkButton(frame, text="トンネル設定を初期化", font=DEFAULT_FONT, width=200,
-                                command=on_remove_tunnel_settings)
+                                command=on_reset_tunnel_settings)
             btn.pack(anchor="center")
         else:
             # 想定外の値の場合は空フレーム
