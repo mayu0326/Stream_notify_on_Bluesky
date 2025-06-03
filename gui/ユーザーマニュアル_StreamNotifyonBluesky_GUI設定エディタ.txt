@@ -1,0 +1,126 @@
+ユーザーマニュアル：StreamNotifyonBluesky_GUI設定エディタ
+
+1. はじめに  
+このマニュアルは、
+設定と管理にGUIの使用を希望するStreamNotifyonBlueskyボットの
+エンドユーザーを対象としています。
+
+このマニュアルでは、
+GUIアプリケーションのインストール、設定、および使用方法について説明します。
+
+2. 前提条件  
+  ・Python 3.10以上  
+  ・依存パッケージのインストール
+  ※requirements.txtまたはdevelopment-requirements.txtを利用。
+  ・cloudflared.exe（Cloudflare Tunnel）やngrok等を利用する場合は実行ファイルをPATHに追加  
+  ・リポジトリ直下に settings.env.example があること  
+
+3. 初回セットアップ  
+  1) コマンドプロンプトを開き、プロジェクトルートに移動  
+  2) `python gui/app_gui.py` を実行  
+  3) settings.env が未作成／不完全な場合、自動で SetupWizard が起動  
+  4) ウィザードの手順：  
+    - step1: はじめに（説明）  
+    - step2: Blueskyアカウント設定（ユーザー名・アプリパスワード）※必須  
+    - step3:「ファイルを作成」でsettings.envに保存し、メイン画面が自動で開く  
+
+【補足】  
+- 初回セットアップ時はBlueskyアカウント情報のみ必須です。
+- 他の設定（Twitch/YouTube/ニコニコ/トンネル等）は後からGUIの各タブで設定してください。  
+- CUI（main.py）で起動した場合も、settings.envが未作成ならGUIセットアップウィザードが自動起動し、\
+ウィザード終了後にCUIは自動終了します。  
+- 必須項目（Bluesky）が未入力の場合はエラーとなり、設定ファイルは作成されません。  
+- 設定ファイル作成後は、メイン画面からいつでも各種設定の追加・編集・接続テストが可能です。
+
+4. メインウィンドウ概要  
+  アプリ起動後に表示される MainWindow は、７つのタブで構成されています。  
+  ・アプリ起動管理
+  ・設定状況確認  
+  ・アカウント設定  
+  ・Bluesky投稿設定
+  ・トンネル通信設定  
+  ・ログ・通知設定
+  ・オプション
+
+5. サーバー・トンネルの起動/停止・安全な終了
+
+  - GUIの「アプリ管理」タブから、サーバー・トンネルの「開始」「停止」操作が可能です。
+  - 停止時は必ずクリーンアップ処理が実行され、\
+  - ログファイル・コンソールに「アプリケーションのクリーンアップ処理が完了しました」等のメッセージが記録されます。
+  - CUI（main.py）で起動した場合も、Ctrl+C（SIGINT）で安全にクリーンアップ・ログ出力・ファイルロック解放が行われます。
+  - どちらの方法でも、異常終了や強制終了時もログ・ファイルロック解放・プロセス終了が保証されます。
+
+6. 設定状況タブ   
+  – Twitch/YouTube/ニコニコ/Bluesky/の設定状況の表示
+  - Discord連携の設定状況の表示
+  - トンネルの接続の設定状況の表示    
+
+7. アカウント設定タブ  
+  Notebook内に以下のサブタブ：  
+  - Twitch: クライアントID/Secret/Broadcaster ID  
+  - Webhook: TwitchWebhook関連の設定
+  - WebhookURL: コールバックURL（恒久用/一時用）の設定・確認  
+  - Bluesky: ユーザー名・アプリパスワード  
+  - YouTube: APIキー・チャンネルIDなど  
+  - ニコニコ: ユーザーID・ポーリング間隔など  
+  → 入力後「接続テスト」ボタンで認証チェック  
+  ※Webhookタブ/WebhookURLタブは分離され、
+  トンネル種別に応じてURL欄の自動切替・編集可否が制御されます。
+
+8. Bluesky投稿設定タブ  
+  Notebook内に各サービス専用 NoticeFrame：  
+  - Twitch放送通知設定（開始/終了）  
+  - YouTube放送通知・動画投稿通知設定  
+  - Niconico放送通知・動画投稿通知設定  
+  各種通知ON/OFF、投稿テンプレート・画像の選択・プレビューが可能  
+  – テンプレート・画像パスは「templates/」「images/」以降の相対パスで保存・管理  
+  – ファイルダイアログから選択後、相対パスで自動保存  
+  – 設定保存時は「保存完了」メッセージが表示されます
+
+8-1. テンプレート・画像管理  
+  – ファイルダイアログから選択後、templates/(テンプレ) または images/(画像) 配下へコピー  
+  – 選択したパスが settings.env に保存（相対パスで記録）  
+  – テンプレート内変数例: {title}, {url}, {username} など（README参照）
+  - 投稿テンプレートの作成と編集もGUIの各サービス通知設定欄から可能です。 
+
+9. トンネル通信設定  
+  – cloudflared/ngrok/localtunnelの設定と個別テスト  
+  – ngrokは「ポート番号」を指定します。 
+  – 設定は settings.env の NGROK_CONFIG_PATH に保存されます。  
+  – customコマンドで登録すれば本GUI対応外トンネル等も利用可能   
+  – GUI/CUIどちらからでもトンネルの起動・停止・再接続・クリーンアップが安全に行えます。
+
+10. ログ・通知設定タブ
+  – タイムゾーン設定 (TimeZoneSettings)：プリセット or カスタム入力  
+  – ログレベル & 保持日数設定 (LoggingConsoleFrame)  
+  – Discord通知設定 (DiscordNotificationFrame)  
+  – ログファイルビューア (LogViewer): app.log, audit.log, post_history.csvの閲覧  
+
+11. トンネル・Webhookの仕様  
+  – Cloudflare(独自ドメイン)/Cloudflare(一時アドレス)/ngrok/localtunnel/customトンネルに対応  
+  – トンネル起動・監視・URL自動反映・再接続を自動化  
+  – WebhookコールバックURLは恒久用/一時用を自動切替し、GUI上で自動表示・編集可否も制御 
+  
+【補足：Cloudflare Tunnelの利用について】
+- Cloudflare Tunnelは「独自ドメイン用」と「一時アドレス(trycloudflare.com)用」で画面・設定が分かれています。
+- 「Cloudflare(独自ドメイン)」はCloudflareのZero Trust管理画面でトンネルを作成し、\
+   config.ymlとトンネル名を指定して利用します。
+- 「Cloudflare(一時アドレス)」は cloudflared.exe の --url オプションで一時的なアドレスを自動発行し、\
+   Webhook一時URLとして自動反映されます。
+- GUIの「トンネルサービス」選択で「cloudflare_domain」「cloudflare_tempurl」を切り替え可能です。
+- 一時アドレス利用時は「cloudflared tunnel --url http://localhost:ポート番号」で起動し、URLは自動取得されます。
+
+【補足：localtunnelの利用について】
+- localtunnelはNode.js製のトンネルサービスです。利用にはNode.jsのインストールが必要です。
+- Windowsの場合、公式サイト（https://nodejs.org/ja/）からNode.jsをインストールしてください。
+- インストール後は本アプリケーションおよびコンソールの再起動が必要な場合があります。
+- インストール後、PowerShellで以下のコマンドを実行してlocaltunnelを導入します：
+  npm install -g localtunnel
+- 例：8080番ポートを公開する場合
+  lt --port 8080
+- 詳細な使い方や注意点は https://www.geeklibrary.jp/counter-attack/localtunnel/ も参照してください。
+
+12. エラーハンドリング・注意事項  
+  – テンプレート・画像未設定やファイル未存在時は投稿を中止し、エラーをログ／Discordへ通知  
+  – APIキー等機密情報はマスク表示  
+  – 設定変更後はBot再起動が必要な場合あり
