@@ -51,38 +51,57 @@ class NiconicoMonitor(Thread):
         # スレッドのメインループ。shutdown_eventがセットされたら安全に終了
         while not self.shutdown_event.is_set():
             try:
-                # 生放送RSSから最新IDを取得し、前回と異なればコールバック実行
-                live_id = self.get_latest_live_id()
-                if live_id and live_id != self.last_live_id:
-                    self.on_new_live(live_id)
-                    self.last_live_id = live_id
+                # 生放送RSSから最新エントリを取得し、前回と異なればコールバック実行
+                live_entry = self.get_latest_live_entry()
+                if live_entry and (not self.last_live_id or live_entry.id != self.last_live_id):
+                    event_context = self._entry_to_context(live_entry, kind="live")
+                    self.on_new_live(event_context)
+                    self.last_live_id = live_entry.id
 
-                # 動画RSSから最新IDを取得し、前回と異なればコールバック実行
-                video_id = self.get_latest_video_id()
-                if video_id and video_id != self.last_video_id:
-                    self.on_new_video(video_id)
-                    self.last_video_id = video_id
+                # 動画RSSから最新エントリを取得し、前回と異なればコールバック実行
+                video_entry = self.get_latest_video_entry()
+                if video_entry and (not self.last_video_id or video_entry.id != self.last_video_id):
+                    event_context = self._entry_to_context(video_entry, kind="video")
+                    self.on_new_video(event_context)
+                    self.last_video_id = video_entry.id
 
             except Exception as e:
                 print(f"[NiconicoMonitor] エラー発生: {e}")
             self.shutdown_event.wait(self.poll_interval)
 
-    def get_latest_live_id(self):
+    def get_latest_live_entry(self):
         """
-        ユーザーの最新生放送IDを取得。
+        ユーザーの最新生放送エントリを取得。
         """
         url = f"https://live.nicovideo.jp/feeds/user/{self.user_id}"
         feed = feedparser.parse(url)
         if feed.entries:
-            return feed.entries[0].id  # 最新の生放送IDを返す
+            return feed.entries[0]
         return None
 
-    def get_latest_video_id(self):
+    def get_latest_video_entry(self):
         """
-        ユーザーの最新動画IDを取得。
+        ユーザーの最新動画エントリを取得。
         """
         url = f"https://www.nicovideo.jp/user/{self.user_id}/video?rss=2.0"
         feed = feedparser.parse(url)
         if feed.entries:
-            return feed.entries[0].id  # 最新の動画IDを返す
+            return feed.entries[0]
         return None
+
+    def _entry_to_context(self, entry, kind="video"):
+        """
+        feedparserのentryからevent_context(dict)を生成
+        """
+        context = {
+            "title": getattr(entry, "title", ""),
+            "author": getattr(entry, "author", ""),
+            "published": getattr(entry, "published", ""),
+        }
+        if kind == "video":
+            context["video_id"] = entry.id
+            context["video_url"] = getattr(entry, "link", "")
+        elif kind == "live":
+            context["live_id"] = entry.id
+            context["stream_url"] = getattr(entry, "link", "")
+        return context
