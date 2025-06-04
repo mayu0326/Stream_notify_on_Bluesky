@@ -45,6 +45,8 @@ def create_youtube_tab(parent):
     yt_key = os.getenv('YOUTUBE_API_KEY', '')
     yt_channel = os.getenv('YOUTUBE_CHANNEL_ID', '')
     yt_poll = os.getenv('YOUTUBE_POLL_INTERVAL', '60')
+    yt_poll_online = os.getenv('YOUTUBE_POLL_INTERVAL_ONLINE', '30')
+    yt_poll_offline = os.getenv('YOUTUBE_POLL_INTERVAL_OFFLINE', '180')
     # タイトルラベル
     label_title = ctk.CTkLabel(youtube_tab, text="YouTube APIキー/チャンネル設定", font=TITLE_FONT)
     label_title.pack(pady=(18, 6))
@@ -80,15 +82,31 @@ def create_youtube_tab(parent):
     desc_color = "white" if ctk.get_appearance_mode() == "Dark" else "black"
     label_channel_desc = ctk.CTkLabel(youtube_tab, text="例: UCxxxx... /channel/UCxxxx... /user/xxxx /c/xxxx @handle も可 (URL貼付もOK)", font=("Meiryo", 12), text_color=desc_color)
     label_channel_desc.pack(anchor="w", padx=28, pady=(0, 8))
-    # ポーリング間隔ラベル＋バリデーション
+    # --- ポーリング間隔エントリ追加 ---
     poll_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
     poll_row.pack(fill="x", padx=20, pady=(10, 0))
-    ctk.CTkLabel(poll_row, text="ポーリング間隔（秒）:", font=DEFAULT_FONT).pack(side="left")
+    ctk.CTkLabel(poll_row, text="ポーリング間隔（秒/通常）:", font=DEFAULT_FONT).pack(side="left")
     label_poll_status = ctk.CTkLabel(poll_row, text="", font=DEFAULT_FONT, width=30)
     label_poll_status.pack(side="left", padx=(8,0))
     entry_poll = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
     entry_poll.insert(0, yt_poll)
-    entry_poll.pack(fill="x", padx=20, pady=(0, 10))
+    entry_poll.pack(fill="x", padx=20, pady=(0, 4))
+    # 放送中
+    poll_online_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
+    poll_online_row.pack(fill="x", padx=20, pady=(0, 0))
+    ctk.CTkLabel(poll_online_row, text="ポーリング間隔（秒/放送中）:", font=DEFAULT_FONT).pack(side="left")
+    entry_poll_online = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
+    entry_poll_online.insert(0, yt_poll_online)
+    entry_poll_online.pack(side="left", fill="x", expand=True, padx=(8,0))
+    # 放送外
+    poll_offline_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
+    poll_offline_row.pack(fill="x", padx=20, pady=(0, 10))
+    ctk.CTkLabel(poll_offline_row, text="ポーリング間隔（秒/放送外）:", font=DEFAULT_FONT).pack(side="left")
+    entry_poll_offline = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
+    entry_poll_offline.insert(0, yt_poll_offline)
+    entry_poll_offline.pack(side="left", fill="x", expand=True, padx=(8,0))
+    # --- ここまでが新規追加部分 ---
+    # チャンネルIDの抽出・バリデーション
     def extract_channel_id_or_url(text):
         """
         入力がチャンネルID（UC...）か、URL（/channel/UC...、/user/...、/c/...、/hoge、/@handle）かを判定し、
@@ -132,6 +150,8 @@ def create_youtube_tab(parent):
         key = entry_key.get().strip()
         channel = entry_channel.get().strip()
         poll = entry_poll.get().strip()
+        poll_online = entry_poll_online.get().strip()
+        poll_offline = entry_poll_offline.get().strip()
         ok = True
         channel_valid = extract_channel_id_or_url(channel)
         if channel and channel_valid and channel != channel_valid:
@@ -148,16 +168,26 @@ def create_youtube_tab(parent):
         else:
             label_channel_status.configure(text="✗", font=DESC_FONT, text_color="red")
             ok = False
-        # ポーリング間隔のバリデーションは撤廃
-        label_poll_status.configure(text="", font=DESC_FONT, text_color="green")
+        # ポーリング間隔のバリデーション
+        for v, entry in zip([poll, poll_online, poll_offline], [entry_poll, entry_poll_online, entry_poll_offline]):
+            if not (v.isdigit() and 1 <= len(v) <= 3):
+                entry.configure(border_color="red")
+                ok = False
+            else:
+                entry.configure(border_color=None)
+        label_poll_status.configure(text="" if ok else "入力エラー", font=DESC_FONT, text_color="green" if ok else "red")
         return ok
     # ポーリング間隔は数字のみ・最大3桁に制限
     def poll_validate_char(new_value):
         return new_value.isdigit() and len(new_value) <= 3 or new_value == ""
     entry_poll.configure(validate="key", validatecommand=(entry_poll.register(poll_validate_char), '%P'))
+    entry_poll_online.configure(validate="key", validatecommand=(entry_poll_online.register(poll_validate_char), '%P'))
+    entry_poll_offline.configure(validate="key", validatecommand=(entry_poll_offline.register(poll_validate_char), '%P'))
     entry_key.bind("<KeyRelease>", lambda e: validate_youtube())
     entry_channel.bind("<KeyRelease>", lambda e: validate_youtube())
     entry_poll.bind("<KeyRelease>", lambda e: validate_youtube())
+    entry_poll_online.bind("<KeyRelease>", lambda e: validate_youtube())
+    entry_poll_offline.bind("<KeyRelease>", lambda e: validate_youtube())
     validate_youtube()
     label_connect_status = ctk.CTkLabel(youtube_tab, text="", font=DEFAULT_FONT)
     def test_youtube_connect():
@@ -225,13 +255,15 @@ def create_youtube_tab(parent):
         key = entry_key.get().strip()
         channel = entry_channel.get().strip()
         poll = entry_poll.get().strip()
+        poll_online = entry_poll_online.get().strip()
+        poll_offline = entry_poll_offline.get().strip()
         if not validate_youtube():
             from gui.app_gui import show_ctk_error
             show_ctk_error(youtube_tab, "エラー", "全ての項目を正しく入力してください。")
             return
         env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
         lines = []
-        found_key = found_channel = found_poll = False
+        found_key = found_channel = found_poll = found_poll_online = found_poll_offline = False
         if os.path.exists(env_path):
             with open(env_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -246,6 +278,12 @@ def create_youtube_tab(parent):
             elif line.startswith('YOUTUBE_POLL_INTERVAL='):
                 new_lines.append(f'YOUTUBE_POLL_INTERVAL={poll}\n')
                 found_poll = True
+            elif line.startswith('YOUTUBE_POLL_INTERVAL_ONLINE='):
+                new_lines.append(f'YOUTUBE_POLL_INTERVAL_ONLINE={poll_online}\n')
+                found_poll_online = True
+            elif line.startswith('YOUTUBE_POLL_INTERVAL_OFFLINE='):
+                new_lines.append(f'YOUTUBE_POLL_INTERVAL_OFFLINE={poll_offline}\n')
+                found_poll_offline = True
             else:
                 new_lines.append(line)
         if not found_key:
@@ -254,6 +292,10 @@ def create_youtube_tab(parent):
             new_lines.append(f'YOUTUBE_CHANNEL_ID={channel}\n')
         if not found_poll:
             new_lines.append(f'YOUTUBE_POLL_INTERVAL={poll}\n')
+        if not found_poll_online:
+            new_lines.append(f'YOUTUBE_POLL_INTERVAL_ONLINE={poll_online}\n')
+        if not found_poll_offline:
+            new_lines.append(f'YOUTUBE_POLL_INTERVAL_OFFLINE={poll_offline}\n')
         try:
             with open(env_path, 'w', encoding='utf-8') as f:
                 f.writelines(new_lines)
