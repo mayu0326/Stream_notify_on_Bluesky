@@ -40,6 +40,10 @@ def start_server_in_thread():
     server_thread.start()
     return server_thread
 
+def stop_cherrypy_server():
+    import cherrypy
+    cherrypy.engine.exit()
+
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     if sys.platform.startswith('win'):

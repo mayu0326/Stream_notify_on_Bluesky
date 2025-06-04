@@ -11,6 +11,13 @@ def start_tunnel_and_monitor(tunnel_logger):
     with _tunnel_proc_lock:
         _tunnel_proc = start_tunnel(tunnel_logger)
         tunnel_proc = _tunnel_proc
+    if tunnel_logger:
+        if tunnel_proc is None:
+            tunnel_logger.error("[tunnel_manager] start_tunnel_and_monitor: トンネルプロセスがNoneです。コマンドや依存アプリの有無を確認してください。")
+        elif hasattr(tunnel_proc, 'poll') and tunnel_proc.poll() is not None:
+            tunnel_logger.error(f"[tunnel_manager] start_tunnel_and_monitor: トンネルプロセスが即時終了しています。poll={tunnel_proc.poll()}")
+        else:
+            tunnel_logger.info("[tunnel_manager] start_tunnel_and_monitor: トンネルプロセスが正常に起動しました。")
     tunnel_service = os.getenv("TUNNEL_SERVICE", "").lower()
     if tunnel_service in ("ngrok", "localtunnel"):
         def get_proc():
