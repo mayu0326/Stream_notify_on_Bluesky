@@ -8,14 +8,6 @@
 
 - GUI/CUIからの起動時、以下の不具合がある
 
--- コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ているので,、
-適切なレベルのときだけ表示されるように修正が必要。
-
-当該ログ
-```
-2025-06-04 10:07:36,621 [ERROR] EventSubリクエスト: url=https://api.twitch.tv/helix/eventsub/subscriptions headers={'Client-ID': 'u7pf6eb12f9kff5xzln7vppfjwe08w', 'Authorization': 'Bearer 4on2v6jofjlxha2vfb455dmrfhr01t', 'Content-Type': 'application/json'} payload={'type': 'stream.offline', 'version': '1', 'condition': {'broadcaster_user_id': '478192219'}, 'transport': {'method': 'webhook', 'callback': 'https://endpoint.mayuneco.net/webhook', 'secret': '77178932db3011a6a6da084b909a380f46cf30f58ab6d6d36b0fa5bbfb8d87eb'}}
-```
-
 -- コンソールに出力されるログが２重になっているため、処理が２度呼ばれているかどこかに不具合がある可能性がある、
 調査と修正が必要
 
@@ -62,6 +54,8 @@ pytestやデフォルトフォールバック時のテンプレート
 
 
 #### 修正完了・作業完了済みの不具合リスト
+
+- コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ている。
 
 - アカウントタブ＞YouTubeにおいて、ポーリング間隔の設定が１種類しかない。
 
