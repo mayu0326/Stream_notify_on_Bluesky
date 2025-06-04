@@ -114,6 +114,38 @@ def api_tunnel_status():
     else:
         return jsonify({"status": "DOWN"})
 
+@webhook_bp.route("/api/tunnel_ping", methods=["GET"])
+def api_tunnel_ping():
+    from tunnel_manager import get_tunnel_proc
+    tunnel_proc = get_tunnel_proc()
+    if tunnel_proc and hasattr(tunnel_proc, 'poll') and tunnel_proc.poll() is None:
+        return jsonify({"status": "UP"})
+    else:
+        return jsonify({"status": "DOWN"})
+
+@webhook_bp.route("/api/server_status", methods=["GET"])
+def api_server_status():
+    try:
+        # サーバーの状態を確認するロジックを追加
+        from main import is_server_running
+        if is_server_running():
+            return jsonify({"status": "UP"})
+        else:
+            return jsonify({"status": "DOWN"})
+    except Exception as e:
+        current_app.logger.error(f"サーバー状態確認エラー: {e}", exc_info=True)
+        return jsonify({"status": "ERROR", "message": str(e)})
+
+@webhook_bp.route("/api/url_status", methods=["GET"])
+def api_url_status():
+    try:
+        # URL状態を確認するロジックを追加
+        url_status = "OK"  # 仮の状態
+        return jsonify({"status": url_status})
+    except Exception as e:
+        current_app.logger.error(f"URL状態確認エラー: {e}", exc_info=True)
+        return jsonify({"status": "ERROR", "message": str(e)})
+
 def handle_404(e):
     try:
         safe_url = escape(request.url)

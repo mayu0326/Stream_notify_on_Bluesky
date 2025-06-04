@@ -273,8 +273,33 @@ class MainControlFrame(ctk.CTkFrame):
 
     def reload_status(self):
         self.append_console("[INFO] ステータスをリロードしました。")
-        self.update_tunnel_status()
-        # TODO: サーバー・トンネル・URLの状態を再取得して反映
+        try:
+            # サーバー状態取得
+            server_resp = requests.get("http://127.0.0.1:3000/api/server_status", timeout=2)
+            self.append_console(f"[DEBUG] サーバー状態レスポンス: {server_resp.text}")
+            server_status = server_resp.json().get("status", "DOWN")
+            if server_status == "UP":
+                self.var_server.set('● 稼働中')
+                self.server_label.configure(text_color="green")
+            else:
+                self.var_server.set('● 停止中')
+                self.server_label.configure(text_color="red")
+
+            # トンネル状態取得
+            self.update_tunnel_status()
+
+            # URL状態取得
+            url_resp = requests.get("http://127.0.0.1:3000/api/url_status", timeout=2)
+            self.append_console(f"[DEBUG] URL状態レスポンス: {url_resp.text}")
+            url_status = url_resp.json().get("status", "UNKNOWN")
+            self.append_console(f"[INFO] URL状態: {url_status}")
+        except requests.exceptions.RequestException as req_err:
+            self.append_console(f"[ERROR] ステータスリロード失敗: ネットワークエラー: {req_err}")
+        except ValueError as val_err:
+            self.append_console(f"[ERROR] ステータスリロード失敗: JSON解析エラー: {val_err}")
+        except Exception as e:
+            self.append_console(f"[ERROR] ステータスリロード失敗: {e}")
+
     def _startup_sequence(self):
         import time
         try:
@@ -350,12 +375,17 @@ class MainControlFrame(ctk.CTkFrame):
             self.append_console("[INFO] トンネルが起動している場合のみ疎通確認が可能です。トンネルを起動してください。")
             return
         try:
-            resp = requests.get("http://127.0.0.1:3000/api/tunnel_status", timeout=2)
-            status = resp.json().get("status", "DOWN")
-            if status == "UP":
+            resp = requests.get("http://127.0.0.1:3000/api/tunnel_ping", timeout=2)
+            self.append_console(f"[DEBUG] 疎通確認レスポンス: {resp.text}")
+            ping_status = resp.json().get("status", "DOWN")
+            if ping_status == "UP":
                 self.append_console("[OK] トンネルは稼働中です。外部からアクセス可能です。")
             else:
                 self.append_console("[NG] トンネルは停止中です。外部からアクセスできません。")
+        except requests.exceptions.RequestException as req_err:
+            self.append_console(f"[ERROR] 疎通確認失敗: ネットワークエラー: {req_err}")
+        except ValueError as val_err:
+            self.append_console(f"[ERROR] 疎通確認失敗: JSON解析エラー: {val_err}")
         except Exception as e:
             self.append_console(f"[ERROR] 疎通確認失敗: {e}")
 

@@ -48,6 +48,10 @@ def stop_cherrypy_server():
 def cleanup_from_gui():
     _cleanup_from_gui()
 
+def is_server_running():
+    import cherrypy
+    return cherrypy.engine.state == cherrypy.engine.states.STARTED
+
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     if sys.platform.startswith('win'):
