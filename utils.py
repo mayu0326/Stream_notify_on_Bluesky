@@ -367,9 +367,10 @@ def get_settings_env_abspath():
 
 # このファイルを直接実行した場合のテストコード例
 if __name__ == '__main__':
-    # format_datetime_filterのテスト用ロガー設定
-    logging.basicConfig(
-        level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    # 既にハンドラが設定されていなければ（＝本体からimportされていない場合のみ）basicConfigを有効化
+    if not logging.getLogger().hasHandlers():
+        logging.basicConfig(
+            level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     util_logger.info("Testing format_datetime_filter...")
 
     # format_datetime_filterのテストケース
