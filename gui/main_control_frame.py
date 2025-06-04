@@ -145,9 +145,6 @@ class MainControlFrame(ctk.CTkFrame):
         for i, (var, lbl, step) in enumerate(zip(self.step_vars, self.step_labels, self.steps)):
             var.set("未実行")
             lbl.configure(text=f"{step}: {var.get()}", text_color="gray")
-        self.console_text.configure(state="normal")
-        self.console_text.delete("1.0", "end")
-        self.console_text.configure(state="disabled")
 
     def update_step(self, idx, status, color=None):
         # ステータスに応じて色分け
