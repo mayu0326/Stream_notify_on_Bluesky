@@ -2,17 +2,7 @@
 
 ### GUIの不具合
 
-- 設定ファイルがない場合に開くセットアップウィザードで設定ウィザードからメイン画面を開くときにエラーが出力される。
-```
-invalid command name "2630630800896update"
-    while executing
-"2630630800896update"
-    ("after" script)
-invalid command name "2630630797824_click_animation"
-    while executing
-"2630630797824_click_animation"
-    ("after" script)
-```
+- 現在のところ不具合は確認されていません。
 
 ### CUIの不具合
 

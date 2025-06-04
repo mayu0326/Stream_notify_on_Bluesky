@@ -44,7 +44,7 @@ __app_version__ = __version__
 # ユーティリティ関数用のロガー（メインアプリから設定可能）
 util_logger = logging.getLogger("AppLogger.Utils")  # サブロガーを作成
 util_logger.setLevel(logging.getLogger("AppLogger").level)
-util_logger.propagate = False
+util_logger.propagate = True  # caplogでキャプチャできるようにTrueに変更
 
 
 def format_datetime_filter(iso_datetime_str, fmt="%Y-%m-%d %H:%M %Z"):
