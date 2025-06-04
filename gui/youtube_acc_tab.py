@@ -82,30 +82,32 @@ def create_youtube_tab(parent):
     desc_color = "white" if ctk.get_appearance_mode() == "Dark" else "black"
     label_channel_desc = ctk.CTkLabel(youtube_tab, text="例: UCxxxx... /channel/UCxxxx... /user/xxxx /c/xxxx @handle も可 (URL貼付もOK)", font=("Meiryo", 12), text_color=desc_color)
     label_channel_desc.pack(anchor="w", padx=28, pady=(0, 8))
-    # --- ポーリング間隔エントリ追加 ---
-    poll_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
-    poll_row.pack(fill="x", padx=20, pady=(10, 0))
-    ctk.CTkLabel(poll_row, text="ポーリング間隔（秒/通常）:", font=DEFAULT_FONT).pack(side="left")
-    label_poll_status = ctk.CTkLabel(poll_row, text="", font=DEFAULT_FONT, width=30)
-    label_poll_status.pack(side="left", padx=(8,0))
-    entry_poll = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
+    # --- ポーリング間隔エントリ（3種）を1つのFrameで縦並びに ---
+    poll_group = ctk.CTkFrame(youtube_tab, fg_color="transparent")
+    poll_group.pack(fill="x", padx=20, pady=(10, 0))
+    # 通常
+    poll_row = ctk.CTkFrame(poll_group, fg_color="transparent")
+    poll_row.pack(fill="x", pady=(0, 2))
+    ctk.CTkLabel(poll_row, text="ポーリング間隔（秒/通常）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
+    entry_poll = ctk.CTkEntry(poll_row, font=DEFAULT_FONT, width=100)
     entry_poll.insert(0, yt_poll)
-    entry_poll.pack(fill="x", padx=20, pady=(0, 4))
+    entry_poll.pack(side="left", padx=(8,0))
+    label_poll_status = ctk.CTkLabel(poll_row, text="", font=DEFAULT_FONT, width=80)
+    label_poll_status.pack(side="left", padx=(8,0))
     # 放送中
-    poll_online_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
-    poll_online_row.pack(fill="x", padx=20, pady=(0, 0))
-    ctk.CTkLabel(poll_online_row, text="ポーリング間隔（秒/放送中）:", font=DEFAULT_FONT).pack(side="left")
-    entry_poll_online = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
+    poll_online_row = ctk.CTkFrame(poll_group, fg_color="transparent")
+    poll_online_row.pack(fill="x", pady=(0, 2))
+    ctk.CTkLabel(poll_online_row, text="ポーリング間隔（秒/放送中）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
+    entry_poll_online = ctk.CTkEntry(poll_online_row, font=DEFAULT_FONT, width=100)
     entry_poll_online.insert(0, yt_poll_online)
-    entry_poll_online.pack(side="left", fill="x", expand=True, padx=(8,0))
+    entry_poll_online.pack(side="left", padx=(8,0))
     # 放送外
-    poll_offline_row = ctk.CTkFrame(youtube_tab, fg_color="transparent")
-    poll_offline_row.pack(fill="x", padx=20, pady=(0, 10))
-    ctk.CTkLabel(poll_offline_row, text="ポーリング間隔（秒/放送外）:", font=DEFAULT_FONT).pack(side="left")
-    entry_poll_offline = ctk.CTkEntry(youtube_tab, font=DEFAULT_FONT)
+    poll_offline_row = ctk.CTkFrame(poll_group, fg_color="transparent")
+    poll_offline_row.pack(fill="x", pady=(0, 6))
+    ctk.CTkLabel(poll_offline_row, text="ポーリング間隔（秒/放送外）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
+    entry_poll_offline = ctk.CTkEntry(poll_offline_row, font=DEFAULT_FONT, width=100)
     entry_poll_offline.insert(0, yt_poll_offline)
-    entry_poll_offline.pack(side="left", fill="x", expand=True, padx=(8,0))
-    # --- ここまでが新規追加部分 ---
+    entry_poll_offline.pack(side="left", padx=(8,0))
     # チャンネルIDの抽出・バリデーション
     def extract_channel_id_or_url(text):
         """
@@ -174,7 +176,8 @@ def create_youtube_tab(parent):
                 entry.configure(border_color="red")
                 ok = False
             else:
-                entry.configure(border_color=None)
+                # OK時はborder_colorを変更しない（configureを呼ばない）
+                pass
         label_poll_status.configure(text="" if ok else "入力エラー", font=DESC_FONT, text_color="green" if ok else "red")
         return ok
     # ポーリング間隔は数字のみ・最大3桁に制限
