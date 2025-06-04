@@ -325,7 +325,7 @@ def create_eventsub_subscription(event_type: str, logger_to_use=None, webhook_ur
     callback_url = webhook_url if webhook_url else os.getenv("WEBHOOK_CALLBACK_URL")
     payload = {
         "type": event_type,
-        "app_version": "1",
+        "version": "1",  # ←修正: 'app_version' → 'version'
         "condition": {"broadcaster_user_id": TWITCH_BROADCASTER_ID},
         "transport": {
             "method": "webhook",
