@@ -1,0 +1,35 @@
+-r requirements.txt
+
+# Lint/Format
+autopep8>=2.0.0
+pycodestyle>=2.10.0
+ruff>=0.0.241
+mypy>=1.0.0
+
+# テスト
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-tornasync>=0.6.0
+pytest-trio>=0.8.0
+pytest-twisted>=1.14.0
+twisted>=22.0.0
+anyio>=3.7.0
+
+# 型定義
+marshmallow>=3.0.0
+marshmallow-dataclass>=8.0.0
+typing-inspect>=0.8.0
+
+# types for type checking
+types-Jinja2>=2.11.9
+types-MarkupSafe>=1.1.10
+types-Pillow>=10.2.0.20240822
+types-pytz>=2025.2.0.20250516
+types-requests>=2.32.0.20250515
+types-tzlocal>=5.1.0.1
+
+# その他
+setuptools>=65.0.0
+virtualenv>=20.20.0
+rich>=13.0.0
+PyYAML>=6.0.0
