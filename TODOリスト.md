@@ -1,22 +1,14 @@
 ## 現在発生している不具合
-- Twitchサブスクリプションが作成できない。
->>現時点で外部からの疎通は確認ができている。
->>おそらくevent.pyのTwitchAPIに送るリクエストの内容のバージョン指定句がapp_versionになっていると思われる(正しくはversionである)
 
-### エラーログ
-```
-2025-06-04 07:59:20,292 [INFO] TwitchAPIアクセストークン取得を確認しました。
-2025-06-04 07:59:20,293 [INFO] stream.online のEventSubサブスクリプションを作成します...
-2025-06-04 07:59:20,455 [ERROR] EventSubリクエスト: url=https://api.twitch.tv/helix/eventsub/subscriptions headers={'Client-ID': 'u7pf6eb12f9kff5xzln7vppfjwe08w', 'Authorization': 'Bearer ge8czy1dd6bx69sk5j941uxg1d5lgd', 'Content-Type': 'application/json'} payload={'type': 'stream.online', 'app_version': '1', 'condition': {'broadcaster_user_id': '478192219'}, 'transport': {'method': 'webhook', 'callback': 'https://endpoint.mayuneco.net/webhook', 'secret': '77178932db3011a6a6da084b909a380f46cf30f58ab6d6d36b0fa5bbfb8d87eb'}}
-2025-06-04 07:59:20,618 [ERROR] EventSubサブスクリプション (stream.online) 作成失敗: HTTPError: Unknown status - N/A 詳細: {}
-2025-06-04 07:59:20,618 [CRITICAL] stream.online EventSubサブスクリプションの作成に失敗しました。詳細: {'status': 'error', 'reason': 'HTTPError: Unknown status - N/A', 'details': {}, 'http_status': None}
-2025-06-04 07:59:20,618 [CRITICAL] 必須EventSubサブスクリプションの作成に失敗したため、Twitch通知は無効化されます。
-```
 ### GUIの不具合
 
 - GUIからトンネルやサーバーの起動や終了ができない。
 
 #### 修正完了・作業完了済みの不具合リスト
+
+- Twitchサブスクリプションが作成できない。
+>>event.pyのTwitchAPIに送るリクエストの内容のバージョン指定句をapp_versionからversionに変更
+>>上記修正後main.py直接起動でEventサブスクリプションが正常に作成できている事を確認済み。
 
 - YouTube放送終了時にBlueskyへ通知するか(NOTIFY_ON_YOUTUBE_OFFLINE=True)が正しく実装されているか、
 調査を行う、実装されていなければ実装が必要である。

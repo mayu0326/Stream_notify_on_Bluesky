@@ -244,6 +244,13 @@ class MainControlFrame(ctk.CTkFrame):
                 main_mod = importlib.import_module("main")
                 main_mod.stop_cherrypy_server()
                 main_mod.cleanup_from_gui()
+                # トンネルも停止
+                try:
+                    from tunnel_manager import stop_tunnel_and_monitor
+                    stop_tunnel_and_monitor()
+                    self.append_console("[INFO] トンネルも停止しました。")
+                except Exception as te:
+                    self.append_console(f"[WARN] トンネル停止時に例外: {te}")
                 self.append_console("[INFO] サーバーは停止しました。")
                 self.var_server.set('● 停止中')
                 self.status_label.configure(text="サーバーは停止中です", text_color="red")
@@ -253,6 +260,12 @@ class MainControlFrame(ctk.CTkFrame):
                 self.reset_status()
                 self.update_tunnel_status()
             except Exception as e:
+                try:
+                    from tunnel_manager import stop_tunnel_and_monitor
+                    stop_tunnel_and_monitor()
+                    self.append_console("[INFO] トンネルも停止しました。")
+                except Exception as te:
+                    self.append_console(f"[WARN] トンネル停止時に例外: {te}")
                 self.append_console(f"[ERROR] サーバー停止失敗: {e}")
                 self.var_server.set('● 停止中')
                 self.status_label.configure(text="サーバーは停止中です", text_color="red")

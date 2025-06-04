@@ -107,9 +107,8 @@ def handle_webhook():
 
 @webhook_bp.route("/api/tunnel_status", methods=["GET"])
 def api_tunnel_status():
-    # TODO: グローバルなtunnel_procを参照し、トンネルの稼働状態を返す実装が必要。現状は仮実装。
-    from tunnel_manager import start_tunnel_and_monitor
-    tunnel_proc = None # 実際はグローバル参照を想定
+    from tunnel_manager import get_tunnel_proc
+    tunnel_proc = get_tunnel_proc()
     if tunnel_proc and hasattr(tunnel_proc, 'poll') and tunnel_proc.poll() is None:
         return jsonify({"status": "UP"})
     else:
