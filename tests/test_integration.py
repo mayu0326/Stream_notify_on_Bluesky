@@ -47,7 +47,7 @@ def test_full_notification_flow(test_client):
         with patch.dict('os.environ', {
             "BLUESKY_USERNAME": "dummyuser",
             "BLUESKY_APP_PASSWORD": "dummypass",
-            "BLUESKY_TEMPLATE_PATH": "templates/twitch_online_template.txt",
+            "BLUESKY_TW_ONLINE_TEMPLATE_PATH": "templates/twitch_online_template.txt",
             "NOTIFY_ON_TWITCH_OFFLINE": "true",
             "NOTIFY_ON_TWITCH_ONLINE": "True"
         }):

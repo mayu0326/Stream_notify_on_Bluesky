@@ -12,7 +12,6 @@ from bluesky import BlueskyPoster, load_template
 from atproto import exceptions as atproto_exceptions
 from jinja2 import Template  # Templateを追加
 from version_info import __version__
-import asyncio
 
 __author__ = "mayuneco(mayunya)"
 __copyright__ = "Copyright (C) 2025 mayuneco(mayunya)"
@@ -46,10 +45,10 @@ def mock_env(monkeypatch):
     # テスト用の環境変数を設定
     monkeypatch.setenv("BLUESKY_USERNAME", "test_user")
     monkeypatch.setenv("BLUESKY_APP_PASSWORD", "test_pass")
-    monkeypatch.setenv("BLUESKY_TEMPLATE_PATH",
+    monkeypatch.setenv("BLUESKY_ONLINE_TEMPLATE_PATH",
                        ".templates/test_template.txt")
     monkeypatch.setenv("BLUESKY_OFFLINE_TEMPLATE_PATH",
-                       "templates/offline_template.txt")
+                       ".templates/default_offline_template.txt")
     # テスト用のデフォルト画像パス
     monkeypatch.setenv("BLUESKY_IMAGE_PATH", "images/test_image.png")
     # テスト時にutil_loggerが出力できるようにログレベルをDEBUGに
@@ -122,7 +121,7 @@ class TestBlueskyPoster:
         poster = BlueskyPoster("user", "pass")
         # os.path.isfileもTrueになるようにパッチ
         with patch("os.path.isfile", return_value=True) as mock_isfile_inner, \
-                patch.dict(os.environ, {"BLUESKY_TEMPLATE_PATH": "templates/twitch_online_template.txt"}):
+                patch.dict(os.environ, {"BLUESKY_TW_ONLINE_TEMPLATE_PATH": "templates/twitch_online_template.txt"}):
             result = poster.post_stream_online(
                 event_context=mock_event_context_online,
                 image_path="images/test_image.png"
@@ -185,7 +184,7 @@ class TestBlueskyPoster:
         mock_isfile.side_effect = isfile_side_effect
 
         poster = BlueskyPoster("user", "pass")
-        with patch.dict(os.environ, {"BLUESKY_TEMPLATE_PATH": patched_path}):
+        with patch.dict(os.environ, {"BLUESKY_TW_ONLINE_TEMPLATE_PATH": patched_path}):
             result = poster.post_stream_online(
                 event_context=mock_event_context_online, image_path=None
             )
@@ -222,7 +221,7 @@ class TestBlueskyPoster:
             "test_user", "test_pass")
 
         # テンプレートパスの存在確認と期待値の決定
-        expected_template_path = os.getenv("BLUESKY_OFFLINE_TEMPLATE_PATH")
+        expected_template_path = os.getenv("BLUESKY_TW_OFFLINE_TEMPLATE_PATH")
         if not expected_template_path or not os.path.isfile(expected_template_path):
             expected_template_path = ".templates/default_offline_template.txt"
         mock_load_template_func.assert_called_once_with(
@@ -264,7 +263,7 @@ class TestBlueskyPoster:
 
         assert result is True  # エラーメッセージでも投稿自体は成功扱い
 
-        expected_template_path = os.getenv("BLUESKY_OFFLINE_TEMPLATE_PATH")
+        expected_template_path = os.getenv("BLUESKY_TW_OFFLINE_TEMPLATE_PATH")
         if not expected_template_path or not os.path.isfile(expected_template_path):
             expected_template_path = ".templates/default_offline_template.txt"
         expected_rendered_error_text = f"Error: Template '{expected_template_path}' not found. Please check settings."
@@ -343,7 +342,7 @@ class TestBlueskyPoster:
             poster.post_stream_offline(mock_event_context_offline)
 
         offline_template_path = os.getenv(
-            "BLUESKY_OFFLINE_TEMPLATE_PATH", "templates/offline_template.txt")
+            "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/offline_template.txt")
         if not offline_template_path or not os.path.isfile(offline_template_path):
             offline_template_path = ".templates/default_offline_template.txt"
         mock_load_template_func.assert_called_once_with(
