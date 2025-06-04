@@ -270,6 +270,11 @@ def is_first_setup():
 
 
 if __name__ == "__main__":
+    if not os.path.exists(SETTINGS_PATH):
+        print("[INFO] 設定ファイルが見つかりません。初期設定ウィザードを起動します。")
+        wizard = SetupWizard(on_finish=lambda: MainWindow().mainloop())
+        wizard.mainloop()
+        sys.exit(0)
     try:
         MainWindow().mainloop()
     except KeyboardInterrupt:
