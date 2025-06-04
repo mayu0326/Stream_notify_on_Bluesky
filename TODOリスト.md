@@ -9,28 +9,19 @@
 - 現在のところ不具合は確認されていません。
 
 ### TODO
+
+### maincontrol_frame.py
+- 実際の疎通確認APIを呼ぶ機能が未実装
+- サーバー・トンネル・URLの状態を再取得して反映する機能も未実装
+
+### 完了済みのTODO
+
 ### tunnel_manager.py: 
 - グローバルなtunnel_procを管理し、ここで停止処理を行う実装が必要。現状は未実装。
 - stop_tunnel関数の適切な場所へのimport
 
 ### webhook_routes.py:
 - グローバルなtunnel_procを参照し、トンネルの稼働状態を返す実装が必要。現状は仮実装。
-
-### maincontrol_frame.py
-- 実際の疎通確認APIを呼ぶ機能が未実装
-- サーバー・トンネル・URLの状態を再取得して反映する機能も未実装
-
-### 記載外だが全体のTODO
-## BLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATH
-- これは現仕様に即していないので、定義名を更新する必要がある。
-そのためこの名前を使ってるもの(大文字・小文字どちらも)を調査し以下に変更する必要がある。
-- BLUESKY_TEMPLATE_PATH　→　BLUESKY_TW_ONLINE_TEMPLATE_PATH
-- BLUESKY_OFFLINE_TEMPLATE_PATH → BLUESKY_TW_OFFLINE_TEMPLATE_PATH
-
-- 従来のBLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATHは、
-pytestやデフォルトフォールバック時のテンプレート
-(内部仕様のため設定ファイルに使うのは適切でない)用の関数として使うことが望ましい。
-
 
 #### 修正完了・作業完了済みの不具合リスト
 
