@@ -57,17 +57,18 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             def get_env(key, default):
                 return default
         notify_online = get_env('NOTIFY_ON_YT_ONLINE', 'False').lower() == 'true'
+        notify_offline = get_env('NOTIFY_ON_YT_OFFLINE', 'False').lower() == 'true'
         notify_newvideo = get_env('NOTIFY_ON_YT_NEWVIDEO', 'False').lower() == 'true'
         tpl_online = get_env('BLUESKY_YT_ONLINE_TEMPLATE_PATH', 'templates/yt_online_template.txt')
         tpl_newvideo = get_env('BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH', 'templates/yt_new_video_template.txt')
         img_path = get_env('BLUESKY_IMAGE_PATH', 'images/noimage.png')
         # 変数
         self.var_online = ctk.BooleanVar(value=notify_online)
+        self.var_offline = ctk.BooleanVar(value=notify_offline)
         self.var_newvideo = ctk.BooleanVar(value=notify_newvideo)
         self.tpl_online = ctk.StringVar(value=tpl_online)
         self.tpl_newvideo = ctk.StringVar(value=tpl_newvideo)
         self.img_path = ctk.StringVar(value=img_path)
-        self.var_offline = ctk.BooleanVar(value=False)
         self.tpl_offline = ctk.StringVar(value='templates/yt_offline_template.txt')
         # UI
         # 並び順: 開始→終了→新着動画
@@ -184,13 +185,16 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
         else:
             lines = []
         new_lines = []
-        found_online = found_newvideo = found_tpl_online = found_tpl_newvideo = found_img = False
+        found_online = found_offline = found_newvideo = found_tpl_online = found_tpl_newvideo = found_img = False
         def bool_str(val):
             return 'True' if val else 'False'
         for line in lines:
             if line.startswith('NOTIFY_ON_YT_ONLINE='):
                 new_lines.append(f'NOTIFY_ON_YT_ONLINE={bool_str(self.var_online.get())}\n')
                 found_online = True
+            elif line.startswith('NOTIFY_ON_YT_OFFLINE='):
+                new_lines.append(f'NOTIFY_ON_YT_OFFLINE={bool_str(self.var_offline.get())}\n')
+                found_offline = True
             elif line.startswith('NOTIFY_ON_YT_NEWVIDEO='):
                 new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={bool_str(self.var_newvideo.get())}\n')
                 found_newvideo = True
@@ -207,6 +211,8 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
                 new_lines.append(line)
         if not found_online:
             new_lines.append(f'NOTIFY_ON_YT_ONLINE={bool_str(self.var_online.get())}\n')
+        if not found_offline:
+            new_lines.append(f'NOTIFY_ON_YT_OFFLINE={bool_str(self.var_offline.get())}\n')
         if not found_newvideo:
             new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={bool_str(self.var_newvideo.get())}\n')
         if not found_tpl_online:
@@ -217,7 +223,6 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             new_lines.append(f'BLUESKY_IMAGE_PATH={self._to_images_relative(self.img_path.get())}\n')
         with open(env_path, 'w', encoding='utf-8') as f:
             f.writelines(new_lines)
-        # messagebox.showinfo('保存完了', 'YouTube通知設定を保存しました。')
         from gui.app_gui import show_ctk_info
         show_ctk_info(self, '保存完了', 'YouTube通知設定を保存しました。')
         self.status_label.configure(text="保存しました")
