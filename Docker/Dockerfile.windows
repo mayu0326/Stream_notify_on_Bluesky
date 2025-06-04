@@ -1,0 +1,45 @@
+# escape=\
+
+# Windows Server Core イメージをベースにする（Python公式イメージはwindowsservercoreベース）
+FROM mcr.microsoft.com/windows/servercore:ltsc2022
+
+# ChocolateyでPython, Node.js, git, curl, 7zipをインストール
+RUN powershell -Command "\
+    Set-ExecutionPolicy Bypass -Scope Process -Force; \
+    [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; \
+    iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))"
+
+RUN choco install -y python --version=3.13.0 \
+    && choco install -y nodejs-lts git curl 7zip
+
+# パスを通す
+ENV PATH="C:\\Python313;C:\\Python313\\Scripts;C:\\Program Files\\nodejs;%PATH%"
+
+# 作業ディレクトリ
+WORKDIR C:/app
+
+# 依存ファイルをコピー
+COPY requirements.txt ./
+
+# 依存パッケージをインストール
+RUN python -m pip install --upgrade pip \
+    && pip install -r requirements.txt
+
+# アプリ本体をコピー
+COPY . .
+
+# localtunnel, ngrok, cloudflared インストール
+RUN npm install -g localtunnel \
+    && curl -L -o ngrok.zip https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-windows-amd64.zip \
+    && 7z x ngrok.zip -oC:\\tools \
+    && del ngrok.zip \
+    && curl -L -o cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
+
+# 必要なポートを開放
+EXPOSE 3000
+
+# 環境変数（例: タイムゾーン）
+ENV TZ=Asia/Tokyo
+
+# 起動コマンド
+CMD ["python", "main.py"]
