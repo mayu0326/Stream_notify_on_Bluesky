@@ -358,6 +358,13 @@ def set_webhook_callback_url_temporary(url, env_path="settings.env"):
         f.writelines(new_lines)
 
 
+def get_settings_env_abspath():
+    """
+    プロジェクトルート直下のsettings.envの絶対パスを返す
+    """
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'settings.env'))
+
+
 # このファイルを直接実行した場合のテストコード例
 if __name__ == '__main__':
     # format_datetime_filterのテスト用ロガー設定

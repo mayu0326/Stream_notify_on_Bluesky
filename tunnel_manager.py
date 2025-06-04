@@ -34,11 +34,13 @@ def tunnel_monitor_loop(
         logger,
         proc_getter,
         proc_setter,
-        env_path="settings.env"):
+        env_path=None):
     import time
     import select
     import re
-    from utils import get_ngrok_public_url, set_webhook_callback_url_temporary
+    from utils import get_ngrok_public_url, set_webhook_callback_url_temporary, get_settings_env_abspath
+    if env_path is None:
+        env_path = get_settings_env_abspath()
     while True:
         proc = proc_getter()
         if proc is None or proc.poll() is not None:
