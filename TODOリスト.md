@@ -6,9 +6,9 @@
 
 ### CUIの不具合
 
-- GUIからトンネルやサーバーの起動や終了ができない。
->>起動はできるようになったが、以下の不具合がある
-- コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ているので,、
+- GUI/CUIからの起動時、以下の不具合がある
+
+-- コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ているので,、
 適切なレベルのときだけ表示されるように修正が必要。
 
 当該ログ
@@ -16,11 +16,10 @@
 2025-06-04 10:07:36,621 [ERROR] EventSubリクエスト: url=https://api.twitch.tv/helix/eventsub/subscriptions headers={'Client-ID': 'u7pf6eb12f9kff5xzln7vppfjwe08w', 'Authorization': 'Bearer 4on2v6jofjlxha2vfb455dmrfhr01t', 'Content-Type': 'application/json'} payload={'type': 'stream.offline', 'version': '1', 'condition': {'broadcaster_user_id': '478192219'}, 'transport': {'method': 'webhook', 'callback': 'https://endpoint.mayuneco.net/webhook', 'secret': '77178932db3011a6a6da084b909a380f46cf30f58ab6d6d36b0fa5bbfb8d87eb'}}
 ```
 
-- コンソールに出力されるログが２重になっているため、処理が２度呼ばれているかどこかに不具合がある可能性がある、
+-- コンソールに出力されるログが２重になっているため、処理が２度呼ばれているかどこかに不具合がある可能性がある、
 調査と修正が必要
 
-- GUIで起動時、誤ってコマンドプロンプトで終了操作(Ctrl+C等)を行った際の、
-以下のログの出力抑制が必要。
+--  GUIで起動時、誤ってCUI側で終了操作(Ctrl+C等)を行った際に出力される以下のログの出力抑制が必要。
 ```
 Traceback (most recent call last):
   File "D:\Documents\StreamNotify_on_Bluesky_dev\gui\app_gui.py", line 285, in <module>
