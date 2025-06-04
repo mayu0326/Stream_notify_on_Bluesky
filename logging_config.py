@@ -94,38 +94,51 @@ def configure_logging(app=None):
     logger.setLevel(log_level)
     logger.propagate = False  # ルートロガーへの伝播を防止
 
+    # 既存ハンドラの型を記録
+    existing_handler_types = {type(h) for h in logger.handlers}
+
     # エラーログとコンソールハンドラの設定
     error_format = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
 
     # 一般ログファイル（app.log）のハンドラ
-    info_file_handler = TimedRotatingFileHandler(
-        "logs/app.log",  # アプリケーション全体のログ
-        when="D",
-        interval=1,
-        backupCount=log_retention_days,
-        encoding="utf-8",
-    )
-    info_file_handler.setLevel(log_level)  # 設定されたログレベルを使用
-    info_file_handler.setFormatter(error_format)
-    logger.addHandler(info_file_handler)
+    if TimedRotatingFileHandler not in existing_handler_types:
+        info_file_handler = TimedRotatingFileHandler(
+            "logs/app.log",  # アプリケーション全体のログ
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        info_file_handler.setLevel(log_level)  # 設定されたログレベルを使用
+        info_file_handler.setFormatter(error_format)
+        logger.addHandler(info_file_handler)
+    else:
+        # 既存の同型ハンドラを再利用
+        info_file_handler = next((h for h in logger.handlers if isinstance(h, TimedRotatingFileHandler)), None)
 
     # エラーログファイル（error.log）のハンドラ
-    error_file_handler = TimedRotatingFileHandler(
-        "logs/error.log",  # エラー専用ログファイル
-        when="D",
-        interval=1,
-        backupCount=log_retention_days,
-        encoding="utf-8",
-    )
-    error_file_handler.setLevel(logging.ERROR)  # ERROR以上のみ記録
-    error_file_handler.setFormatter(error_format)
-    logger.addHandler(error_file_handler)  # AppLoggerに追加
+    if TimedRotatingFileHandler not in existing_handler_types:
+        error_file_handler = TimedRotatingFileHandler(
+            "logs/error.log",  # エラー専用ログファイル
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        error_file_handler.setLevel(logging.ERROR)  # ERROR以上のみ記録
+        error_file_handler.setFormatter(error_format)
+        logger.addHandler(error_file_handler)  # AppLoggerに追加
+    else:
+        error_file_handler = next((h for h in logger.handlers if isinstance(h, TimedRotatingFileHandler)), None)
 
     # コンソール出力用ハンドラ
-    console_handler = logging.StreamHandler()
-    console_handler.setLevel(log_level)  # 設定されたログレベルを使用
-    console_handler.setFormatter(error_format)
-    logger.addHandler(console_handler)
+    if logging.StreamHandler not in existing_handler_types:
+        console_handler = logging.StreamHandler()
+        console_handler.setLevel(log_level)  # 設定されたログレベルを使用
+        console_handler.setFormatter(error_format)
+        logger.addHandler(console_handler)
+    else:
+        console_handler = next((h for h in logger.handlers if isinstance(h, logging.StreamHandler)), None)
 
     # Discord通知の有効/無効設定
     discord_enabled = os.getenv("DISCORD_NOTIFICATION_ENABLED", "false").lower() == "true"
