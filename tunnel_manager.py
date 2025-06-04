@@ -1,16 +1,25 @@
 import threading
 import os
 
+# グローバルでトンネルプロセスを管理
+_tunnel_proc = None
+_tunnel_proc_lock = threading.Lock()
+
 def start_tunnel_and_monitor(tunnel_logger):
     from tunnel import start_tunnel
-    tunnel_proc = start_tunnel(tunnel_logger)
+    global _tunnel_proc
+    with _tunnel_proc_lock:
+        _tunnel_proc = start_tunnel(tunnel_logger)
+        tunnel_proc = _tunnel_proc
     tunnel_service = os.getenv("TUNNEL_SERVICE", "").lower()
     if tunnel_service in ("ngrok", "localtunnel"):
         def get_proc():
-            return tunnel_proc
+            with _tunnel_proc_lock:
+                return _tunnel_proc
         def set_proc(p):
-            nonlocal tunnel_proc
-            tunnel_proc = p
+            global _tunnel_proc
+            with _tunnel_proc_lock:
+                _tunnel_proc = p
         monitor_thread = threading.Thread(
             target=tunnel_monitor_loop,
             args=(
@@ -25,8 +34,16 @@ def start_tunnel_and_monitor(tunnel_logger):
 
 def stop_tunnel_and_monitor():
     from tunnel import stop_tunnel
-    # TODO: グローバルなtunnel_procを管理し、ここで停止処理を行う実装が必要。現状は未実装。
-    pass
+    global _tunnel_proc
+    with _tunnel_proc_lock:
+        if _tunnel_proc:
+            stop_tunnel(_tunnel_proc)
+            _tunnel_proc = None
+
+def get_tunnel_proc():
+    global _tunnel_proc
+    with _tunnel_proc_lock:
+        return _tunnel_proc
 
 def tunnel_monitor_loop(
         tunnel_service,
