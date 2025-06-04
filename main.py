@@ -65,7 +65,10 @@ if __name__ == "__main__":
         signal.signal(signal.SIGBREAK, signal_handler)
     atexit.register(cleanup_application)
     if initialize_app(app, None):
-        server_thread = start_server_in_thread()
+        from threading import Thread
+        from tunnel_manager import run_cherrypy_server
+        server_thread = Thread(target=run_cherrypy_server, daemon=True)
+        server_thread.start()
         try:
             while server_thread.is_alive():
                 import time
