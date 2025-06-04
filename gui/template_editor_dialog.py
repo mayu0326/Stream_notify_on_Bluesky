@@ -36,10 +36,14 @@ SAMPLE_CONTEXT = {
         "title": "ニコ生テスト配信",
         "start_time": "2025-06-02 20:00",
         "stream_url": "https://live.nicovideo.jp/watch/lv123456789",
+        "author": "投稿者名サンプル",
+        "published": "2025-06-02 20:00:00",
     },
     "niconico_new_video": {
         "title": "新作ニコニコ動画",
         "video_url": "https://www.nicovideo.jp/watch/sm12345678",
+        "author": "動画投稿者サンプル",
+        "published": "2025-06-01 19:00:00",
     },
 }
 # 除外リスト
@@ -86,10 +90,14 @@ TEMPLATE_ARGS = {
         ("タイトル", "title"),
         ("開始日時", "start_time"),
         ("視聴URL", "stream_url"),
+        ("投稿者名", "author"),
+        ("投稿日時", "published"),
     ],
     "niconico_new_video": [
         ("動画タイトル", "title"),
         ("動画URL", "video_url"),
+        ("投稿者名", "author"),
+        ("投稿日時", "published"),
     ],
 }
 # --- サービスごとのテンプレートサブフォルダ定義 ---
