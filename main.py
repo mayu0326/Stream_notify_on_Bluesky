@@ -24,6 +24,7 @@ from app_initializer import initialize_app
 from tunnel_manager import stop_tunnel_and_monitor
 from webhook_routes import webhook_bp, handle_404
 from cleanup import cleanup_application, signal_handler
+from cleanup import cleanup_from_gui as _cleanup_from_gui
 from flask import Flask
 import atexit
 import signal
@@ -43,6 +44,9 @@ def start_server_in_thread():
 def stop_cherrypy_server():
     import cherrypy
     cherrypy.engine.exit()
+
+def cleanup_from_gui():
+    _cleanup_from_gui()
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
