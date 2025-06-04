@@ -266,11 +266,13 @@ class SetupWizard(ctk.CTkToplevel):
                 new_lines.append(line)
         with open(get_settings_env_abspath(), 'w', encoding='utf-8') as f:
             f.writelines(new_lines)
+        # settings.envが存在しない場合は明示的にダークモードへ
+        # (ただし、ファイル保存直後なので必ず存在するため、この判定は不要)
         from gui.app_gui import show_ctk_info
         show_ctk_info(self, "完了", "設定ファイルを作成しました。\nメイン画面を開きます")
-        self.cancel_all_after()
-        self.destroy()
         if self.on_finish:
+            self.cancel_all_after()
             self.on_finish()
+        # self.destroy() は on_finish 側で呼ばれる場合があるのでここでは呼ばない
 
 # ...existing code...

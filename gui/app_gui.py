@@ -270,14 +270,16 @@ def is_first_setup():
 
 
 if __name__ == "__main__":
-    if not os.path.exists(SETTINGS_PATH):
-        print("[INFO] 設定ファイルが見つかりません。初期設定ウィザードを起動します。")
-        wizard = SetupWizard(on_finish=lambda: MainWindow().mainloop())
-        wizard.mainloop()
-        sys.exit(0)
-    try:
+    if is_first_setup():
+        # 設定ファイルがなければセットアップウィザードをダークモード(system)で起動
+        ctk.set_appearance_mode("system")
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        def on_finish():
+            root.destroy()
+            MainWindow().mainloop()   
+        SetupWizard(master=root, on_finish=on_finish)
+        root.mainloop()
+    else:
         MainWindow().mainloop()
-    except KeyboardInterrupt:
-        print("アプリケーションを終了します (Ctrl+C)")
-        # トレースバックを抑制し、静かに終了
-        sys.exit(0)
