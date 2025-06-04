@@ -34,12 +34,15 @@ import customtkinter as ctk
 import os
 from tkinter import messagebox
 
+ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+
 DEFAULT_FONT = ("Yu Gothic UI", 15, "normal")
 LOG_FILES = [
-    ("アプリケーションログ (app.log)", "../../logs/app.log"),
-    ("監査ログ (audit.log)", "../../logs/audit.log"),
-    ("エラーログ (error.log)", "../../logs/error.log"),
-    ("Bluesky投稿履歴 (post_history.csv)", "../../logs/post_history.csv"),
+    ("アプリケーションログ (app.log)", os.path.join(ROOT_DIR, "logs/app.log")),
+    ("監査ログ (audit.log)", os.path.join(ROOT_DIR, "logs/audit.log")),
+    ("エラーログ (error.log)", os.path.join(ROOT_DIR, "logs/error.log")),
+    ("トンネルログ (tunnel.log)", os.path.join(ROOT_DIR, "logs/tunnel.log")),
+    ("Bluesky投稿履歴 (post_history.csv)", os.path.join(ROOT_DIR, "logs/post_history.csv")),
 ]
 
 
@@ -75,7 +78,7 @@ class LogViewer(ctk.CTkFrame):
 
     def get_selected_log_path(self):
         idx = self.file_combo.cget("values").index(self.file_combo.get())
-        return os.path.abspath(os.path.join(os.path.dirname(__file__), LOG_FILES[idx][1]))
+        return LOG_FILES[idx][1]
 
     def load_log(self, show_message=False):
         try:
