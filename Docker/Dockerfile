@@ -1,33 +1,40 @@
-# Base Image: Windows Server Core with Python 3.10
-FROM mcr.microsoft.com/windows/servercore/python:3.10-windowsservercore-ltsc2022
+# syntax=docker/dockerfile:1
 
-# Set the working directory in the container
-WORKDIR C:/app
+# ベースイメージ
+FROM python:3.13-slim
 
-# Download and install cloudflared.exe
-SHELL ["powershell", "-Command"]
-RUN $ErrorActionPreference = 'Stop';     $ProgressPreference = 'SilentlyContinue';     New-Item -ItemType Directory -Force -Path C:/app/bin;     Invoke-WebRequest -Uri https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe -OutFile C:/app/bin/cloudflared.exe
+# 作業ディレクトリ作成
+WORKDIR /app
 
-# Add cloudflared directory to PATH
-ENV PATH C:/app/bin;%PATH%
+# 依存ファイルをコピー
+COPY requirements.txt ./
 
-# Copy requirements.txt from project root (build context) to C:/app/ in the image
-COPY requirements.txt C:/app/requirements.txt
+# 依存パッケージをインストール
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Install Python dependencies
-RUN pip install --no-cache-dir -r C:/app/requirements.txt
+# アプリ本体をコピー
+COPY . .
 
-# Copy application files and directories from project root (build context) to C:/app/ in the image
-COPY main.py C:/app/
-COPY bluesky.py C:/app/
-COPY eventsub.py C:/app/
-COPY tunnel.py C:/app/
-COPY utils.py C:/app/
-COPY logging_config.py C:/app/
-COPY app_version.py C:/app/
+# ポート開放（CherryPyのデフォルト3000番）
+EXPOSE 3000
 
-COPY templates/ C:/app/templates/
-COPY settings.env.example C:/app/settings.env
+# 環境変数（必要に応じて）
+ENV TZ=Asia/Tokyo
 
-# Command to run the application
+# Node.jsインストール
+RUN apt-get update \
+    && apt-get install -y curl gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# localtunnel, ngrok, cloudflared インストール
+RUN npm install -g localtunnel \
+    && curl -fsSL https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.tgz | tar xz -C /usr/local/bin \
+    && mv /usr/local/bin/ngrok /usr/local/bin/ngrok \
+    && curl -L -o /usr/local/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64 \
+    && chmod +x /usr/local/bin/cloudflared
+
+# 起動コマンド
 CMD ["python", "main.py"]
