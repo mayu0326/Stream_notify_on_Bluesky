@@ -222,9 +222,19 @@ class BlueskyPoster:
         if platform == "twitch":
             template_path = os.getenv(
                 "BLUESKY_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+            required_keys = ["broadcaster_user_name", "broadcaster_user_login", "channel_url"]
+        elif platform == "youtube" or platform == "yt_nico":
+            template_path = os.getenv(
+                "BLUESKY_YT_OFFLINE_TEMPLATE_PATH", "templates/yt_offline_template.txt")
+            required_keys = ["title", "channel_name", "channel_url"]
+        elif platform == "niconico":
+            template_path = os.getenv(
+                "BLUESKY_NICO_OFFLINE_TEMPLATE_PATH", "templates/nico_offline_template.txt")
+            required_keys = ["title", "channel_name", "channel_url"]
         else:
             template_path = os.getenv(
                 "BLUESKY_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+            required_keys = ["title", "channel_url"]
         # テンプレートファイルがなければデフォルトテンプレートにフォールバック
         if not template_path or not os.path.isfile(template_path):
             logger.warning(f"配信終了テンプレートファイルが見つかりません: {template_path}. デフォルトテンプレートにフォールバックします。")
@@ -232,8 +242,6 @@ class BlueskyPoster:
         template_obj = load_template(path=template_path)
 
         # 必須キーのチェック
-        required_keys = ["broadcaster_user_name",
-                         "broadcaster_user_login", "channel_url"]
         missing_keys = [
             key for key in required_keys if key not in event_context or event_context[key] is None]
         if missing_keys:
@@ -252,9 +260,9 @@ class BlueskyPoster:
             # 画像なしで投稿
             self.client.send_post(text=post_text)
             logger.info(
-                f"Blueskyへの自動投稿成功 (stream.offline): {event_context.get('broadcaster_user_name')}")
+                f"Blueskyへの自動投稿成功 (stream.offline): {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}")
             audit_logger.info(
-                f"Bluesky投稿成功 (stream.offline): User - {event_context.get('broadcaster_user_name')}")
+                f"Bluesky投稿成功 (stream.offline): User - {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}")
             success = True
             return True
         except exceptions.AtProtocolError as e:
@@ -269,7 +277,7 @@ class BlueskyPoster:
         finally:
             # 投稿履歴を記録
             self._write_post_history(
-                title=f"配信終了: {event_context.get('broadcaster_user_name', 'N/A')}",
+                title=f"配信終了: {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}",
                 category="Offline",
                 url=event_context.get(
                     "channel_url", f"https://twitch.tv/{event_context.get('broadcaster_user_login', '')}"),

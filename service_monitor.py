@@ -91,7 +91,7 @@ def handle_youtube_offline(live_info):
         success = bluesky_poster.post_stream_offline(
             event_context=event_context,
             image_path=os.getenv("BLUESKY_IMAGE_PATH"),
-            platform="yt_nico"
+            platform="youtube"
         )
         if success:
             logger.info("[YouTube] Bluesky投稿成功（配信終了）")
