@@ -60,6 +60,7 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
         notify_offline = get_env('NOTIFY_ON_YT_OFFLINE', 'False').lower() == 'true'
         notify_newvideo = get_env('NOTIFY_ON_YT_NEWVIDEO', 'False').lower() == 'true'
         tpl_online = get_env('BLUESKY_YT_ONLINE_TEMPLATE_PATH', 'templates/yt_online_template.txt')
+        tpl_offline = get_env('BLUESKY_YT_OFFLINE_TEMPLATE_PATH', 'templates/yt_offline_template.txt')
         tpl_newvideo = get_env('BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH', 'templates/yt_new_video_template.txt')
         img_path = get_env('BLUESKY_IMAGE_PATH', 'images/noimage.png')
         # 変数
@@ -67,9 +68,9 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
         self.var_offline = ctk.BooleanVar(value=notify_offline)
         self.var_newvideo = ctk.BooleanVar(value=notify_newvideo)
         self.tpl_online = ctk.StringVar(value=tpl_online)
+        self.tpl_offline = ctk.StringVar(value=tpl_offline)
         self.tpl_newvideo = ctk.StringVar(value=tpl_newvideo)
         self.img_path = ctk.StringVar(value=img_path)
-        self.tpl_offline = ctk.StringVar(value='templates/yt_offline_template.txt')
         # UI
         # 並び順: 開始→終了→新着動画
         ctk.CTkSwitch(self, text="YouTubeLive：開始通知を送信する", variable=self.var_online, font=DEFAULT_FONT, onvalue=True, offvalue=False).grid(row=0, column=0, sticky="w", pady=5)
@@ -185,7 +186,7 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
         else:
             lines = []
         new_lines = []
-        found_online = found_offline = found_newvideo = found_tpl_online = found_tpl_newvideo = found_img = False
+        found_online = found_offline = found_newvideo = found_tpl_online = found_tpl_offline = found_tpl_newvideo = found_img = False
         def bool_str(val):
             return 'True' if val else 'False'
         for line in lines:
@@ -201,6 +202,9 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             elif line.startswith('BLUESKY_YT_ONLINE_TEMPLATE_PATH='):
                 new_lines.append(f'BLUESKY_YT_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
                 found_tpl_online = True
+            elif line.startswith('BLUESKY_YT_OFFLINE_TEMPLATE_PATH='):
+                new_lines.append(f'BLUESKY_YT_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
+                found_tpl_offline = True
             elif line.startswith('BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH='):
                 new_lines.append(f'BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH={self._to_templates_relative(self.tpl_newvideo.get())}\n')
                 found_tpl_newvideo = True
@@ -217,6 +221,8 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={bool_str(self.var_newvideo.get())}\n')
         if not found_tpl_online:
             new_lines.append(f'BLUESKY_YT_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
+        if not found_tpl_offline:
+            new_lines.append(f'BLUESKY_YT_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
         if not found_tpl_newvideo:
             new_lines.append(f'BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH={self._to_templates_relative(self.tpl_newvideo.get())}\n')
         if not found_img:
