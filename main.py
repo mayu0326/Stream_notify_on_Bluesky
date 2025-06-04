@@ -29,6 +29,7 @@ from flask import Flask
 import atexit
 import signal
 import sys
+import os
 
 app = Flask(__name__)
 app.register_blueprint(webhook_bp)
@@ -51,6 +52,12 @@ def cleanup_from_gui():
 def is_server_running():
     import cherrypy
     return cherrypy.engine.state == cherrypy.engine.states.STARTED
+
+SETTINGS_ENV_PATH = "settings.env"
+
+if not os.path.exists(SETTINGS_ENV_PATH):
+    print("[ERROR] 設定ファイルが見つかりません。'settings.env' を作成してください。")
+    sys.exit(1)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
