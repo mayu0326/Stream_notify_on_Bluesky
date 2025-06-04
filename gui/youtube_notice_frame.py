@@ -31,14 +31,20 @@ import customtkinter as ctk
 import os
 from tkinter import filedialog
 from PIL import Image, ImageTk
+import sys
 
 DEFAULT_FONT = ("Yu Gothic UI", 18, "normal")
+
+def get_settings_env_path():
+    # プロジェクトルート直下のsettings.envを絶対パスで取得
+    import os
+    base = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base, 'settings.env')
 
 class YouTubeNoticeFrame(ctk.CTkFrame):
     def __init__(self, master=None):
         super().__init__(master)
-        # 設定値の初期化
-        env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../settings.env'))
+        env_path = get_settings_env_path()
         if os.path.exists(env_path):
             with open(env_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -171,7 +177,7 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
 
     def save_yt_settings(self):
         from tkinter import messagebox
-        env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
+        env_path = get_settings_env_path()
         if os.path.exists(env_path):
             with open(env_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -179,12 +185,14 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             lines = []
         new_lines = []
         found_online = found_newvideo = found_tpl_online = found_tpl_newvideo = found_img = False
+        def bool_str(val):
+            return 'True' if val else 'False'
         for line in lines:
             if line.startswith('NOTIFY_ON_YT_ONLINE='):
-                new_lines.append(f'NOTIFY_ON_YT_ONLINE={str(self.var_online.get())}\n')
+                new_lines.append(f'NOTIFY_ON_YT_ONLINE={bool_str(self.var_online.get())}\n')
                 found_online = True
             elif line.startswith('NOTIFY_ON_YT_NEWVIDEO='):
-                new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={str(self.var_newvideo.get())}\n')
+                new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={bool_str(self.var_newvideo.get())}\n')
                 found_newvideo = True
             elif line.startswith('BLUESKY_YT_ONLINE_TEMPLATE_PATH='):
                 new_lines.append(f'BLUESKY_YT_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
@@ -198,9 +206,9 @@ class YouTubeNoticeFrame(ctk.CTkFrame):
             else:
                 new_lines.append(line)
         if not found_online:
-            new_lines.append(f'NOTIFY_ON_YT_ONLINE={str(self.var_online.get())}\n')
+            new_lines.append(f'NOTIFY_ON_YT_ONLINE={bool_str(self.var_online.get())}\n')
         if not found_newvideo:
-            new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={str(self.var_newvideo.get())}\n')
+            new_lines.append(f'NOTIFY_ON_YT_NEWVIDEO={bool_str(self.var_newvideo.get())}\n')
         if not found_tpl_online:
             new_lines.append(f'BLUESKY_YT_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
         if not found_tpl_newvideo:

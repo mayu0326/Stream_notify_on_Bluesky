@@ -21,6 +21,7 @@ Stream notify on Bluesky
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 from version_info import __version__
+from utils import get_settings_env_abspath
 
 __author__ = "mayuneco(mayunya)"
 __copyright__ = "Copyright (C) 2025 mayuneco(mayunya)"
@@ -263,7 +264,7 @@ class SetupWizard(ctk.CTkToplevel):
                     new_lines.append(line)
             else:
                 new_lines.append(line)
-        with open('settings.env', 'w', encoding='utf-8') as f:
+        with open(get_settings_env_abspath(), 'w', encoding='utf-8') as f:
             f.writelines(new_lines)
         # settings.envが存在しない場合は明示的にダークモードへ
         # (ただし、ファイル保存直後なので必ず存在するため、この判定は不要)
