@@ -3,6 +3,65 @@
 ### GUIの不具合
 
 - GUIからトンネルやサーバーの起動や終了ができない。
+>>起動はできるようになったが、以下の不具合がある
+-- トンネル状態の表示が停止のままであるため、調査と修正が必要
+-- サーバー停止は以下のエラーにより失敗しているため調査と修正が必要
+```
+[ERROR] サーバー停止失敗: module 'main' has no attribute 'stop_cherrypy_server'
+```
+- コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ているので,、
+適切なレベルのときだけ表示されるように修正が必要。
+
+当該ログ
+```
+2025-06-04 10:07:36,621 [ERROR] EventSubリクエスト: url=https://api.twitch.tv/helix/eventsub/subscriptions headers={'Client-ID': 'u7pf6eb12f9kff5xzln7vppfjwe08w', 'Authorization': 'Bearer 4on2v6jofjlxha2vfb455dmrfhr01t', 'Content-Type': 'application/json'} payload={'type': 'stream.offline', 'version': '1', 'condition': {'broadcaster_user_id': '478192219'}, 'transport': {'method': 'webhook', 'callback': 'https://endpoint.mayuneco.net/webhook', 'secret': '77178932db3011a6a6da084b909a380f46cf30f58ab6d6d36b0fa5bbfb8d87eb'}}
+```
+
+- コンソールに出力されるログが２重になっているため、処理が２度呼ばれているかどこかに不具合がある可能性がある、
+調査と修正が必要
+
+- GUIで起動時、誤ってコマンドプロンプトで終了操作(Ctrl+C等)を行った際の、
+以下のログの出力抑制が必要。
+```
+Traceback (most recent call last):
+  File "D:\Documents\StreamNotify_on_Bluesky_dev\gui\app_gui.py", line 285, in <module>
+    MainWindow().mainloop()
+    ~~~~~~~~~~~~~~~~~~~~~^^
+  File "D:\Documents\StreamNotify_on_Bluesky_dev\.venv\Lib\site-packages\customtkinter\windows\ctk_tk.py", line 165, in mainloop
+    super().mainloop(*args, **kwargs)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1599, in mainloop
+    self.tk.mainloop(n)
+    ~~~~~~~~~~~~~~~~^^^
+  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2063, in __call__
+    def __call__(self, *args):
+
+KeyboardInterrupt
+```
+
+### TODO
+### tunnel_manager.py: 
+- グローバルなtunnel_procを管理し、ここで停止処理を行う実装が必要。現状は未実装。
+- stop_tunnel関数の適切な場所へのimport
+
+### webhook_routes.py:
+- グローバルなtunnel_procを参照し、トンネルの稼働状態を返す実装が必要。現状は仮実装。
+
+### maincontrol_frame.py
+- 実際の疎通確認APIを呼ぶ機能が未実装
+- サーバー・トンネル・URLの状態を再取得して反映する機能も未実装
+
+### 記載外だが全体のTODO
+## BLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATH
+- これは現仕様に即していないので、定義名を更新する必要がある。
+そのためこの名前を使ってるもの(大文字・小文字どちらも)を調査し以下に変更する必要がある。
+- BLUESKY_TEMPLATE_PATH　→　BLUESKY_TW_ONLINE_TEMPLATE_PATH
+- BLUESKY_OFFLINE_TEMPLATE_PATH → BLUESKY_TW_OFFLINE_TEMPLATE_PATH
+
+- 従来のBLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATHは、
+pytestやデフォルトフォールバック時のテンプレート
+(内部仕様のため設定ファイルに使うのは適切でない)用の関数として使うことが望ましい。
+
 
 #### 修正完了・作業完了済みの不具合リスト
 
@@ -45,26 +104,3 @@ LOCALTUNNEL_CMD=
 CUSTOM_TUNNEL_CMD=
 
 ```
-
-### TODO
-### tunnel_manager.py: 
-- グローバルなtunnel_procを管理し、ここで停止処理を行う実装が必要。現状は未実装。
-- stop_tunnel関数の適切な場所へのimport
-
-### webhook_routes.py:
-- グローバルなtunnel_procを参照し、トンネルの稼働状態を返す実装が必要。現状は仮実装。
-
-### maincontrol_frame.py
-- 実際の疎通確認APIを呼ぶ機能が未実装
-- サーバー・トンネル・URLの状態を再取得して反映する機能も未実装
-
-### 記載外だが全体のTODO
-## BLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATH
-- これは現仕様に即していないので、定義名を更新する必要がある。
-そのためこの名前を使ってるもの(大文字・小文字どちらも)を調査し以下に変更する必要がある。
-- BLUESKY_TEMPLATE_PATH　→　BLUESKY_TW_ONLINE_TEMPLATE_PATH
-- BLUESKY_OFFLINE_TEMPLATE_PATH → BLUESKY_TW_OFFLINE_TEMPLATE_PATH
-
-- 従来のBLUESKY_TEMPLATE_PATH,BLUESKY_OFFLINE_TEMPLATE_PATHは、
-pytestやデフォルトフォールバック時のテンプレート
-(内部仕様のため設定ファイルに使うのは適切でない)用の関数として使うことが望ましい。
