@@ -2,8 +2,17 @@
 
 ### GUIの不具合
 
-- 設定ファイルがない場合に開くセットアップウィザードでtkの子ウィンドウが表示されてしまう。
->>ファイル作成後ウィザードを閉じてメイン画面をひらくという挙動が実装されていない。
+- 設定ファイルがない場合に開くセットアップウィザードで設定ウィザードからメイン画面を開くときにエラーが出力される。
+```
+invalid command name "2630630800896update"
+    while executing
+"2630630800896update"
+    ("after" script)
+invalid command name "2630630797824_click_animation"
+    while executing
+"2630630797824_click_animation"
+    ("after" script)
+```
 
 ### CUIの不具合
 
