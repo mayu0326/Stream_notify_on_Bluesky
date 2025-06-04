@@ -6,28 +6,7 @@
 
 ### CUIの不具合
 
-- GUI/CUIからの起動時、以下の不具合がある
-
--- コンソールに出力されるログが２重になっているため、処理が２度呼ばれているかどこかに不具合がある可能性がある、
-調査と修正が必要
-
---  GUIで起動時、誤ってCUI側で終了操作(Ctrl+C等)を行った際に出力される以下のログの出力抑制が必要。
-```
-Traceback (most recent call last):
-  File "D:\Documents\StreamNotify_on_Bluesky_dev\gui\app_gui.py", line 285, in <module>
-    MainWindow().mainloop()
-    ~~~~~~~~~~~~~~~~~~~~~^^
-  File "D:\Documents\StreamNotify_on_Bluesky_dev\.venv\Lib\site-packages\customtkinter\windows\ctk_tk.py", line 165, in mainloop
-    super().mainloop(*args, **kwargs)
-    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 1599, in mainloop
-    self.tk.mainloop(n)
-    ~~~~~~~~~~~~~~~~^^^
-  File "C:\Program Files\WindowsApps\PythonSoftwareFoundation.Python.3.13_3.13.1008.0_x64__qbz5n2kfra8p0\Lib\tkinter\__init__.py", line 2063, in __call__
-    def __call__(self, *args):
-
-KeyboardInterrupt
-```
+- 現在のところ不具合は確認されていません。
 
 ### TODO
 ### tunnel_manager.py: 
@@ -54,6 +33,11 @@ pytestやデフォルトフォールバック時のテンプレート
 
 
 #### 修正完了・作業完了済みの不具合リスト
+
+- GUIで起動時、誤ってCUI側で終了操作(Ctrl+C等)を行った際に出力される以下のログの出力抑制が必要。
+
+- コンソールに出力されるログが２重になっているため、処理が２度呼ばれている
+>>configure_logging内で「すでに同種のハンドラが追加されている場合は新たに追加しない」処理を追加する。
 
 - コンソールに本来はログ/コンソール設定が[DEBUG]でないと表示されないはずのログが出ている。
 
