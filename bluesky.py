@@ -116,7 +116,7 @@ class BlueskyPoster:
         # テンプレートパスの決定
         if platform == "twitch":
             template_path = os.getenv(
-                "BLUESKY_TEMPLATE_PATH", "templates/twitch_online_template.txt")
+                "BLUESKY_TW_ONLINE_TEMPLATE_PATH", "templates/twitch_online_template.txt")
             required_keys = ["title", "category_name", "stream_url",
                              "broadcaster_user_login", "broadcaster_user_name"]
         elif platform == "youtube" or platform == "yt_nico":
@@ -128,8 +128,9 @@ class BlueskyPoster:
                 "BLUESKY_NICO_ONLINE_TEMPLATE_PATH", "templates/nico_online_template.txt")
             required_keys = ["title", "stream_url", "channel_id", "channel_name"]
         else:
+            # 内部デフォルト用途
             template_path = os.getenv(
-                "BLUESKY_TEMPLATE_PATH", "templates/twitch_online_template.txt")
+                "BLUESKY_TW_ONLINE_TEMPLATE_PATH", ".templates/default_offline_template.txt")
             required_keys = ["title", "stream_url"]
 
         # テンプレートファイルがなければデフォルトテンプレートにフォールバック
@@ -221,7 +222,7 @@ class BlueskyPoster:
         """
         if platform == "twitch":
             template_path = os.getenv(
-                "BLUESKY_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+                "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
             required_keys = ["broadcaster_user_name", "broadcaster_user_login", "channel_url"]
         elif platform == "youtube" or platform == "yt_nico":
             template_path = os.getenv(
@@ -233,7 +234,7 @@ class BlueskyPoster:
             required_keys = ["title", "channel_name", "channel_url"]
         else:
             template_path = os.getenv(
-                "BLUESKY_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+                "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
             required_keys = ["title", "channel_url"]
         # テンプレートファイルがなければデフォルトテンプレートにフォールバック
         if not template_path or not os.path.isfile(template_path):

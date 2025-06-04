@@ -60,8 +60,8 @@ class TwitchNoticeFrame(ctk.CTkFrame):
                 return default
         notify_online = get_env('NOTIFY_ON_TWITCH_ONLINE', 'False').lower() == 'true'
         notify_offline = get_env('NOTIFY_ON_TWITCH_OFFLINE', 'False').lower() == 'true'
-        tpl_online = get_env('BLUESKY_TEMPLATE_PATH', 'templates/twitch_online_template.txt')
-        tpl_offline = get_env('BLUESKY_OFFLINE_TEMPLATE_PATH', 'templates/twitch_offline_template.txt')
+        tpl_online = get_env('BLUESKY_TW_ONLINE_TEMPLATE_PATH', 'templates/twitch_online_template.txt')
+        tpl_offline = get_env('BLUESKY_TW_OFFLINE_TEMPLATE_PATH', 'templates/twitch_offline_template.txt')
         img_path = get_env('BLUESKY_IMAGE_PATH', 'images/noimage.png')
         # 変数
         # 通知ON/OFFスイッチ
@@ -177,11 +177,11 @@ class TwitchNoticeFrame(ctk.CTkFrame):
             elif line.startswith('NOTIFY_ON_TWITCH_OFFLINE='):
                 new_lines.append(f'NOTIFY_ON_TWITCH_OFFLINE={bool_str(self.var_offline.get())}\n')
                 found_offline = True
-            elif line.startswith('BLUESKY_TEMPLATE_PATH='):
-                new_lines.append(f'BLUESKY_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
+            elif line.startswith('BLUESKY_TW_ONLINE_TEMPLATE_PATH='):
+                new_lines.append(f'BLUESKY_TW_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
                 found_tpl_online = True
-            elif line.startswith('BLUESKY_OFFLINE_TEMPLATE_PATH='):
-                new_lines.append(f'BLUESKY_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
+            elif line.startswith('BLUESKY_TW_OFFLINE_TEMPLATE_PATH='):
+                new_lines.append(f'BLUESKY_TW_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
                 found_tpl_offline = True
             elif line.startswith('BLUESKY_IMAGE_PATH='):
                 new_lines.append(f'BLUESKY_IMAGE_PATH={self._to_images_relative(self.img_path.get())}\n')
@@ -193,9 +193,9 @@ class TwitchNoticeFrame(ctk.CTkFrame):
         if not found_offline:
             new_lines.append(f'NOTIFY_ON_TWITCH_OFFLINE={bool_str(self.var_offline.get())}\n')
         if not found_tpl_online:
-            new_lines.append(f'BLUESKY_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
+            new_lines.append(f'BLUESKY_TW_ONLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_online.get())}\n')
         if not found_tpl_offline:
-            new_lines.append(f'BLUESKY_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
+            new_lines.append(f'BLUESKY_TW_OFFLINE_TEMPLATE_PATH={self._to_templates_relative(self.tpl_offline.get())}\n')
         if not found_img:
             new_lines.append(f'BLUESKY_IMAGE_PATH={self._to_images_relative(self.img_path.get())}\n')
         with open(env_path, 'w', encoding='utf-8') as f:

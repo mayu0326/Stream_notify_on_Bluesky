@@ -34,8 +34,8 @@ DEFAULT_FONT = ("Yu Gothic UI", 18, "normal")
 
 TEMPLATE_KEYS = {
     "Twitch": [
-        ("配信開始テンプレート", "BLUESKY_TEMPLATE_PATH"),
-        ("配信終了テンプレート", "BLUESKY_OFFLINE_TEMPLATE_PATH"),
+        ("配信開始テンプレート", "BLUESKY_TW_ONLINE_TEMPLATE_PATH"),
+        ("配信終了テンプレート", "BLUESKY_TW_OFFLINE_TEMPLATE_PATH"),
         ("画像ファイル", "BLUESKY_IMAGE_PATH"),
     ],
     "YouTube": [
