@@ -128,12 +128,6 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 ├── youtube_monitor.py
 ├── Cloudflared/
 │   └── config.yml.example
-├── diff/
-│   └── diff_tool.py
-├── Docker/
-│   ├── docker_readme_section.ja.md
-│   ├── docker-compose.yml
-│   └── Dockerfile
 ├── document/
 │   ├── All-ModuleList.md
 │   ├── ARCHITECTURE.ja.md
@@ -395,45 +389,6 @@ TIMEZONE=system
 APPEARANCE_MODE=system
 
 ```
-</details>
-
-## Dockerでの実行（Windowsコンテナ・Windowsネイティブ）
-
-このアプリケーションは、Windowsコンテナとして実行できます。
-Windowsコンテナを利用する場合は、`Docker/Dockerfile.windows` を使用してください。
-
-<details>
-
-### 前提条件
-
-- **Docker Desktop（Windows）**  
-  - Windows 10/11 Pro, Enterprise, Education でのみWindowsコンテナが利用可能です。
-  - Docker Desktopの「コンテナタイプ」を「Windowsコンテナ」に切り替えてください。
-- **Windows Server Core** ベースのイメージを使用します。
-
-### セットアップ
-
-1. **`settings.env`の準備**  
-   プロジェクトルートの `settings.env.example` を `settings.env` にコピーし、必要な情報を記入してください。
-
-2. **Dockerイメージのビルド**  
-   PowerShellで以下を実行します（パスはプロジェクトルート想定）:
-   ```powershell
-   docker build -f Docker/Dockerfile.windows -t streamnotify-bluesky-win .
-   ```
-
-3. **Dockerコンテナの実行**  
-   ```powershell
-   docker run --rm -it -p 3000:3000 --env-file settings.env streamnotify-bluesky-win
-   ```
-   - `-p 3000:3000` でポートを割り当てます。
-   - `--env-file settings.env` で環境変数を渡します。
-
-### 注意事項
-
-- WindowsコンテナはWindows 10/11 Homeでは利用できません。
-- 本アプリケーションはWindows専用です。LinuxやMacでは動作・サポートされません。
-
 </details>
 
 ---

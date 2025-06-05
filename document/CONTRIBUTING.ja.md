@@ -6,18 +6,6 @@
 ## はじめに
 
 ### 開発環境のセットアップ
-
-一貫した開発環境のために、Windows用Dockerコンテナの使用を推奨します。
-
-*   **Dockerを利用する場合 (推奨):**
-    1.  Windows用のDocker Desktopがインストールされていることを確認してください。
-    2.  Docker Desktopの「コンテナタイプ」を「Windowsコンテナ」に切り替えてください。
-    3.  `README.md`の「Dockerでの実行（Windowsコンテナ・Windowsネイティブ）」セクションの指示に従って、イメージをビルドし、コンテナを実行してください。
-    4.  ローカルでファイルを編集することで開発が可能です。適切にボリュームマウントを設定していれば（例えばソースコード用。\
-    Docker Composeを使う場合は`settings.env`や`logs`のマウントも可能です）、Dockerはこれらの更新されたファイルを使用します。
-    5.  活発な開発のためには、`docker-compose.override.yml`や開発専用のcomposeファイルにソースコードのボリュームマウントを追加すると良いでしょう。
-    6.  READMEで説明されているように、`settings.env`ファイルを作成し、設定することを忘れないでください。
-
 *   **手動でのPythonセットアップ:**
     1.  お使いのWindowsマシンにPython 3.13以上がインストールされていることを確認してください。
     2.  リポジトリをクローンします: `git clone https://github.com/mayu0326/Twitch-Stream-notify-on-Bluesky.git`
@@ -70,7 +58,7 @@
 
 1.  GitHubでリポジトリを**フォーク**します。
 2.  あなたのフォークをローカルに**クローン**します: `git clone https://github.com/YOUR_USERNAME/Twitch-Stream-notify-on-Bluesky.git`
-3.  変更のための新しい**ブランチを作成**します。`development`ブランチからブランチを作成するのが良い習慣です: `git checkout -b your-feature-branch development`
+3.  変更のための新しい**ブランチを作成**します。`develop`ブランチからブランチを作成するのが良い習慣です: `git checkout -b your-feature-branch develop`
 4.  **変更を行い**、明確で説明的なコミットメッセージと共にコミットします。
 5.  **すべてのテストがパスすることを確認**します。(下記の「テストの実行」を参照)。
 6.  変更が必要な場合は、**ドキュメントを更新**します (`README.md`、コメントなど)。
@@ -88,16 +76,6 @@
 ## テストの実行
 
 *   テストスイートを実行するには (`pytest`を使用):
-    ```bash
-    python -m pytest tests/
-    ```
-*   **開発にDockerを使用している場合:**
-    実行中のコンテナ内でテストを実行できます:
-    ```bash
-    # docker-composeサービス名が'twitch-bluesky-bot'の場合
-    docker-compose exec twitch-bluesky-bot python -m pytest tests/
-    ```
-    または、コンテナ内でシェルを実行している場合:
     ```bash
     python -m pytest tests/
     ```
