@@ -135,7 +135,6 @@
 - templates/: Bluesky投稿用Jinja2テンプレート（Twitch/YouTube/ニコニコ等サービスごと）
 - images/: 投稿用画像（noimage.png等）
 - logs/: ログファイル（app.log, error.log, audit.log, post_history.csv）
-- Docker/: Dockerfile, docker-compose.yml, docker_readme_section.md
 
 ### 4. 開発・CI/CDセットアップ
 
@@ -146,7 +145,7 @@
 
 ### 5. ドキュメントファイル
 
-- README.md: メインドキュメント（機能・セットアップ・使い方・FAQ・Docker・貢献）
+- README.md: メインドキュメント（機能・セットアップ・使い方・FAQ・貢献）
 - document/CONTRIBUTING.ja.md: 貢献ガイド
 - document/comprehensive_summary_japanese.md: 日本語要約
 - document/consolidated_summary_japanese.md: 内部メモ・推奨事項
