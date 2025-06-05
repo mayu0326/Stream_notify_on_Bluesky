@@ -87,9 +87,6 @@
 | config.yml.example                | 設定      | Cloudflared用サンプル設定                                    | Cloudflare利用時                         |
 | consolidated_summary_japanese.md  | ドキュメント| 機能・構成の簡易まとめ（日本語）                             | -                                        |
 | development-requirements.txt      | 設定      | 開発用依存パッケージリスト                                   | pip                                      |
-| docker-compose.yml                | 設定      | Docker用構成ファイル                                         | Docker利用時                             |
-| docker_readme_section.ja.md       | ドキュメント| Docker用構成・説明書（日本語）                               | Docker利用時                             |
-| Dockerfile                        | 設定      | Docker用ビルドファイル                                       | Docker利用時                             |
 | pytest.ini                        | 設定      | pytest設定                                                   | pytest                                   |
 | requirements.txt                  | 設定      | 本番用依存パッケージリスト                                   | pip                                      |
 | settings.env / settings.env.example| 設定     | 環境変数・設定ファイル                                       | main.py、各コア・GUI                      |
