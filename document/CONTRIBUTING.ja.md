@@ -7,23 +7,23 @@
 
 ### 開発環境のセットアップ
 
-一貫した開発環境のために、Dockerの使用を強く推奨します。
+一貫した開発環境のために、Windows用Dockerコンテナの使用を推奨します。
 
 *   **Dockerを利用する場合 (推奨):**
-    1.  Windows用のDocker Desktopがインストールされ、Windowsコンテナ用に設定されていることを確認してください。
-    2.  `README.md`の「Dockerでの実行 (Windowsコンテナ)」セクションの指示に従って、イメージをビルドし、コンテナを実行してください。
-    3.  ローカルでファイルを編集することで開発が可能です。適切にボリュームマウントを設定していれば（例えばソースコード用。\
-    ただし、提供されている`docker-compose.yml`は主に`settings.env`と`logs`をマウントします）、\
-    Dockerはこれらの更新されたファイルを使用します。\
-    活発な開発のためには、`docker-compose.override.yml`や開発専用のcomposeファイルにソースコードのボリュームマウントを追加すると良いでしょう。
-    4.  READMEで説明されているように、`settings.env`ファイルを作成し、設定することを忘れないでください。
+    1.  Windows用のDocker Desktopがインストールされていることを確認してください。
+    2.  Docker Desktopの「コンテナタイプ」を「Windowsコンテナ」に切り替えてください。
+    3.  `README.md`の「Dockerでの実行（Windowsコンテナ・Windowsネイティブ）」セクションの指示に従って、イメージをビルドし、コンテナを実行してください。
+    4.  ローカルでファイルを編集することで開発が可能です。適切にボリュームマウントを設定していれば（例えばソースコード用。\
+    Docker Composeを使う場合は`settings.env`や`logs`のマウントも可能です）、Dockerはこれらの更新されたファイルを使用します。
+    5.  活発な開発のためには、`docker-compose.override.yml`や開発専用のcomposeファイルにソースコードのボリュームマウントを追加すると良いでしょう。
+    6.  READMEで説明されているように、`settings.env`ファイルを作成し、設定することを忘れないでください。
 
 *   **手動でのPythonセットアップ:**
     1.  お使いのWindowsマシンにPython 3.13以上がインストールされていることを確認してください。
     2.  リポジトリをクローンします: `git clone https://github.com/mayu0326/Twitch-Stream-notify-on-Bluesky.git`
     3.  プロジェクトディレクトリに移動します: `cd Twitch-Stream-notify-on-Bluesky`
     4.  仮想環境を作成します: `python -m venv venv`
-    5.  仮想環境をアクティベートします: `.\venv\Scripts\activate`
+    5.  仮想環境をアクティベートします: `./venv/Scripts/activate`（PowerShellの場合は`./venv/Scripts/Activate.ps1`）
     6.  依存関係をインストールします: `pip install -r requirements.txt`
     7.  `development-requirements.txt`ファイルが存在する場合は、それらもインストールします: \
     `pip install -r development-requirements.txt` (これには通常、`pytest`、`autopep8`、`pre-commit`のようなパッケージが含まれます)。
