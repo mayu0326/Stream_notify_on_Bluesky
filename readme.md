@@ -75,8 +75,6 @@ ngrokのアカウント(ngrok利用時のみ)
 本アプリケーションはCloudflare Tunnel「のみ」対応ではありません。\
 ngrok、localtunnel、カスタムトンネルもサポートされています。
 
-<detail>
-
 - `TUNNEL_SERVICE`環境変数でサービスを切り替え、各種コマンド\
 （`TUNNEL_CMD`/`NGROK_CMD`/`LOCALTUNNEL_CMD`/`CUSTOM_TUNNEL_CMD`）でトンネルを起動・管理します。
 - コマンド未設定時は警告ログを出し、トンネルは起動しません。\
@@ -96,7 +94,6 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 
 詳細なセットアップ・運用方法は`ARCHITECTURE.ja.md`や`CONTRIBUTING.ja.md`も参照してください。
 
-</detail>
 ---
 ## セットアップ手順
 - **※このアプリケーションはWindows専用です。LinuxやMacには対応していません。**
