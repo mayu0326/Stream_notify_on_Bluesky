@@ -395,12 +395,12 @@ APPEARANCE_MODE=system
 
 ## カスタマイズ
 
-カスタマイズ・運用Tipsは [Customization-Tips.md](wiki/Customization-Tips) に移動しました。詳しくはWikiをご覧ください。
+カスタマイズ・運用Tipsは [User-Manual-GUI の「10. カスタマイズ・運用Tips」](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/User-Manual-GUI#10) に移動しました。詳しくはWikiをご覧ください。
 ---
 
 ## よくある質問（FAQ）
 
-[FAQ・トラブルシューティング](wiki/FAQ) に移動しました。詳しくはWikiをご覧ください。
+[FAQ・トラブルシューティング](FAQ) に移動しました。詳しくはWikiをご覧ください。
 
 ---
 ## 運用上の注意
@@ -440,36 +440,8 @@ APPEARANCE_MODE=system
 ---
 ## 自動テストの実行方法
 
-本アプリケーションは主要な機能やバリデーションの自動テストを備えています。  
-テストは [pytest](https://docs.pytest.org/) で簡単に実行できます。
+自動テストの実行方法は [Testing](Testing) に移動しました。詳しくはWikiをご覧ください。
 
-### テストの実行手順
-
-<details>
-
-必要なパッケージをインストール（未インストールの場合）
-
- ```
- pip install pytest
- ```
-プロジェクトルートで以下のコマンドを実行
- ```
-python -m pytest
- ```
-- 特定のテストファイルだけを実行したい場合は
- ```
- pytest test/test_utils.py
- ```
-
-テスト結果が表示され、すべてのテストがパスすればOKです。
-
-</details>
-
-### テストの補足
-
-- テストコードは `test/` ディレクトリにあります。
-- テストの追加や修正はこのディレクトリ内の各ファイルに記述してください。
-- 詳細な使い方は [pytest公式ドキュメント](https://docs.pytest.org/) を参照してください。
 ---
 ### 今後の開発予定
 - ここに書かれてある内容は将来的に実装を計画している、または検討している項目であり、\
