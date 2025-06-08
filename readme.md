@@ -395,7 +395,7 @@ APPEARANCE_MODE=system
 
 ## カスタマイズ
 
-カスタマイズ・運用Tipsは [User-Manual-GUI の「10. カスタマイズ・運用Tips」](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/User-Manual-GUI#10) に移動しました。詳しくはWikiをご覧ください。
+- カスタマイズ・運用Tipsは [User-Manual-GUI](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/User-Manual-GUI#10) に移動しました。詳しくはWikiをご覧ください。
 ---
 
 ## よくある質問（FAQ）
