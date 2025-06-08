@@ -104,9 +104,9 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 3. GUI（`python gui/app_gui.py`）を起動
 4. 初回起動時はウィザードでBlueskyアカウント等を設定
 5. 通知したいサービスやテンプレートをGUIで選択・保存
-6. [FAQ](FAQ)や[GUIマニュアル](User-Manual-GUI)も参照
+6. [FAQ](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/FAQ) や [GUIマニュアル](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/User-Manual-GUI) も参照してください。
 
-詳しいセットアップ方法は[インストール・セットアップ手順](Getting-Started-Setup)をご確認ください。
+詳しいセットアップ方法は [インストール・セットアップ手順](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/Getting-Started-Setup) をご確認ください。
 
 ---
 
@@ -117,7 +117,7 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 
 ## よくある質問（FAQ）
 
-[FAQ・トラブルシューティング](FAQ) に移動しました。詳しくはWikiをご覧ください。
+[FAQ・トラブルシューティング](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/FAQ) に移動しました。詳しくはWikiをご覧ください。
 
 ---
 ## 運用上の注意
@@ -152,12 +152,12 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 ## 貢献
 このアプリケーションを改善し、拡張するための貢献を歓迎します！\
 バグの報告、機能強化の提案、プルリクエストの提出方法の詳細については、\
-[貢献ガイドライン](CONTRIBUTING.ja.md)をご覧ください。
+[貢献ガイドライン](./CONTRIBUTING.ja.md)をご覧ください。
 
 ---
 ## 自動テストの実行方法
 
-自動テストの実行方法は [Testing](Testing) に移動しました。詳しくはWikiをご覧ください。
+自動テストの実行方法は [Testing](https://github.com/mayu0326/Stream_notify_on_Bluesky/wiki/Testing) に移動しました。詳しくはWikiをご覧ください。
 
 ---
 ### 今後の開発予定
