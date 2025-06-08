@@ -94,10 +94,9 @@ ngrok、localtunnel、カスタムトンネルもサポートされています�
 - ngrokやlocaltunnel利用時は**各公式手順に従いインストール・設定**をしてください。
 - Customトンネルもコマンド指定で利用可能ですが、**動作保証・サポート対象外**です。
 
-</detail>
-
 詳細なセットアップ・運用方法は`ARCHITECTURE.ja.md`や`CONTRIBUTING.ja.md`も参照してください。
 
+</detail>
 ---
 ## セットアップ手順
 - **※このアプリケーションはWindows専用です。LinuxやMacには対応していません。**
