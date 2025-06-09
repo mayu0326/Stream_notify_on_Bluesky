@@ -47,8 +47,11 @@ def start_tunnel(logger=None):
     tunnel_service = os.getenv("TUNNEL_SERVICE", "").lower()
     tunnel_cmd = None
 
-    if tunnel_service == "cloudflare":
+    # cloudflare系
+    if tunnel_service in ("cloudflare", "cloudflare_domain"):
         tunnel_cmd = os.getenv("TUNNEL_CMD")
+    elif tunnel_service == "cloudflare_tempurl":
+        tunnel_cmd = os.getenv("CLOUDFLARE_TEMP_CMD")
     elif tunnel_service == "ngrok":
         tunnel_cmd = os.getenv("NGROK_CMD")
         # NGROK_CMDが未設定の場合はNGROK_AUTH_TOKEN等から組み立ててもよい
