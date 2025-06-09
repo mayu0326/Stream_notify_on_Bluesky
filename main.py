@@ -31,7 +31,7 @@ import signal
 import sys
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.register_blueprint(webhook_bp)
 app.register_error_handler(404, handle_404)
 
