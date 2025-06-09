@@ -1,22 +1,22 @@
 @echo off
 
-REM バッチファイル自身が存在するディレクトリに移動
+REM Move to the directory where the batch file itself resides 
 cd /d %~dp0
 
-REM Pythonバージョン確認
+REM Check Python version 
 python --version
 
-REM venv作成
+REM Create venv 
 python -m venv venv
 
-REM venv有効化
+REM Venv activation 
 call venv\Scripts\activate.bat
 
-REM 必要なパッケージインストール
+REM Install required packages 
 pip install -r requirements.txt
 
-REM 完了メッセージを出す
-echo インストールが完了しました。
+REM Send completion message 
+echo Installation completed.
 
-REM 終了時に一時停止
+REM Pause on exit 
 pause

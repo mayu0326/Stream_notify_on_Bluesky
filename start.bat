@@ -1,16 +1,16 @@
 @if not "%~0"=="%~dp0.\%~nx0" start /min cmd /c,"%~dp0.\%~nx0" %* & goto :eof
 
-REM バッチファイル自身が存在するディレクトリに移動
+REM Move to the directory where this batch file exists
 cd /d %~dp0
 
-REM Pythonバージョン確認
+REM Check Python version
 python --version
 
-REM venv有効化
+REM Activate venv
 call venv\Scripts\activate.bat
 
-REM GUIアプリの起動
+REM Launch GUI application
 python gui\app_gui.py
 
-REM 終了時に一時停止
+REM Pause when finished
 pause
