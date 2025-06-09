@@ -6,15 +6,19 @@
 
 | ファイル名                | 種類         | 主な用途・役割                                                                 | 主なインポート先・使われ方                |
 |--------------------------|--------------|-------------------------------------------------------------------------------|-------------------------------------------|
+| app_initializer.py       | ユーティリティ| アプリ初期化・環境変数ロード                                                  | main.py                                  |
 | app_version.py           | ユーティリティ| アプリバージョン管理（version_info.py経由で全体からimport・利用）              | version_info.py、main.py、各コア・GUI     |
 | bluesky.py               | コア         | Blueskyへの投稿処理・テンプレート管理。                                        | main.py、各監視モジュール                 |
 | cleanup.py               | ユーティリティ| 終了時のクリーンアップ処理・リソース解放                                      | main.py                                   |
+| debug_env_path.py        | ユーティリティ| デバッグ用パス設定                                                            | main.py、開発時                          |
 | eventsub.py              | コア         | Twitch EventSub Webhookの管理・通知検知。                                      | main.py                                   |
 | logging_config.py        | ユーティリティ| ログ設定・出力レベル管理。                                                     | main.py、各コア・GUI                      |
+| log_viewer.py            | ユーティリティ| ログ閲覧・履歴管理                                                            | GUI、main.py                             |
 | main.py                  | コア         | アプリ全体の起動・管理。トンネル管理や監視、GUI起動などのエントリーポイント。 | 単体実行・全体の起動点                    |
 | niconico_monitor.py      | コア         | ニコニコ生放送・動画の監視・通知。                                             | main.py                                   |
 | service_monitor.py       | コア         | サービス状態監視・ヘルスチェック                                               | main.py                                   |
 | tunnel.py                | コア         | トンネル通信アプリ（Cloudflare/ngrok/localtunnel/custom）の起動・管理。        | main.py、GUI（tunnel_connection等）       |
+| tunnel_manager.py        | コア         | トンネル管理の補助・状態管理                                                  | main.py、tunnel.py                       |
 | utils.py                 | ユーティリティ| 各種共通関数（パス変換・日付整形・ファイル操作など）。                         | 各コア・GUI・テスト                       |
 | version_info.py          | ユーティリティ| __version__を一元的に提供                                                     | main.py、各コア・GUI、テスト             |
 | webhook_routes.py        | コア         | Webhookエンドポイントのルーティング・受信処理                                   | main.py                                   |
@@ -89,7 +93,11 @@
 | development-requirements.txt      | 設定      | 開発用依存パッケージリスト                                   | pip                                      |
 | pytest.ini                        | 設定      | pytest設定                                                   | pytest                                   |
 | requirements.txt                  | 設定      | 本番用依存パッケージリスト                                   | pip                                      |
-| settings.env / settings.env.example| 設定     | 環境変数・設定ファイル                                       | main.py、各コア・GUI                      |
+| settings.env.example              | 設定      | 環境変数・設定ファイル（サンプル）                           | main.py、各コア・GUI                      |
+| pep8_check.txt                    | 設定      | pep8チェック用                                               | 開発時                                   |
+| pyproject.toml                    | 設定      | Pythonプロジェクト設定                                       | poetry/pip等                             |
+| setup.bat / start.bat /           | 設定      | Windows用セットアップ・起動バッチ                            | -                                        |
+| Cloudflared\install_tunnel.bat    | 設定      | Windows用トンネルセットアップバッチ                            | -                                        |
 
 ---
 
