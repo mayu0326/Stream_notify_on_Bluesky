@@ -138,3 +138,11 @@ config.yml export-ignore
 
 # release ファイル
 /release/* export-ignore
+
+# その他の除外
+*.bak export-ignore
+wiki/* export-ignore
+
+# その他のドキュメント
+document/FileTree.md export-ignore
+document/wiki-manual.md export-ignore
