@@ -1,10 +1,14 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import eventsub
 import bluesky  # BlueskyPosterはbluesky経由で参照
 from markupsafe import escape
 import os
 
 webhook_bp = Blueprint('webhook', __name__)
+
+@webhook_bp.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @webhook_bp.route("/webhook", methods=["POST", "GET"])
 @webhook_bp.route("/webhook/", methods=["POST", "GET"])
