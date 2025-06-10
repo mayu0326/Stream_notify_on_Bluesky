@@ -58,7 +58,6 @@
 | webhookurl_acc_tab.py                   | GUI       | Webhook URL設定タブ                                          | app_gui.py                                |
 | youtube_acc_tab.py                      | GUI       | YouTubeアカウント設定タブ                                    | app_gui.py                                |
 | youtube_notice_frame.py                 | GUI       | YouTube通知設定タブ                                          | app_gui.py                                |
-| ユーザーマニュアル....txt                | ドキュメント| GUI設定エディタのユーザーマニュアル                          | ドキュメント用途                          |
 
 ---
 
