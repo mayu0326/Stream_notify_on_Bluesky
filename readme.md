@@ -70,31 +70,6 @@ ngrokのアカウント(ngrok利用時のみ)
 
 ---
 
-## トンネル要件 / Tunnel Requirements
-
-本アプリケーションはCloudflare Tunnel「のみ」対応ではありません。\
-ngrok、localtunnel、カスタムトンネルもサポートされています。
-
-- `TUNNEL_SERVICE`環境変数でサービスを切り替え、各種コマンド\
-（`TUNNEL_CMD`/`NGROK_CMD`/`LOCALTUNNEL_CMD`/`CUSTOM_TUNNEL_CMD`）でトンネルを起動・管理します。
-- コマンド未設定時は警告ログを出し、トンネルは起動しません。\
-終了時はterminate/waitで正常終了、タイムアウトや例外時はkillで強制終了し、\
-詳細なログを出力します。
-- Cloudflare Tunnel利用時は**Cloudflare Zero Trust**でトンネル作成・`config.yml`準備が必要です。
-  - Cloudflare Tunnelは「独自ドメイン用」と「一時アドレス(trycloudflare.com)用」で\
-     設定・画面が分かれています。
-  - 「Cloudflare(独自ドメイン)」はZero Trust管理画面でトンネル・ドメインを発行し、\
-     config.ymlとトンネル名を指定して利用する従来のCloudflare設定です。
-  - 「Cloudflare(一時アドレス)」は cloudflared.exe の --url オプションで一時的な https://xxxx.trycloudflare.com\
-     アドレスを自動発行し、Webhook一時URLとして自動反映されます。
-  - GUIの「トンネルサービス」選択で「cloudflare_domain」「cloudflare_tempurl」を切り替え可能です。
-  - Cloudflare一時アドレス利用時、URLは自動取得され一時URLに設定・表示されます。
-- ngrokやlocaltunnel利用時は**各公式手順に従いインストール・設定**をしてください。
-- Customトンネルもコマンド指定で利用可能ですが、**動作保証・サポート対象外**です。
-
-詳細なセットアップ・運用方法は`ARCHITECTURE.ja.md`や`CONTRIBUTING.ja.md`も参照してください。
-
----
 ## セットアップ手順
 - **※このアプリケーションはWindows専用です。LinuxやMacには対応していません。**
 - もし仮にWindows以外の環境で動いたとしてもサポート対象外です。
