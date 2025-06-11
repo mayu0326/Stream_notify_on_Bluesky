@@ -1,6 +1,6 @@
 Twitch 放送開始 🎉
 
-配信者: {{ broadcaster_user_name }} ({{ broadcaster_user_login }})
+配信者: {{ broadcaster_user_name }} 
 タイトル: {{ title }}
 カテゴリ: {{ category_name }}
 開始日時: {{ start_time | datetimeformat }}

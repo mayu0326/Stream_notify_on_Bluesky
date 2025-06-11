@@ -48,14 +48,24 @@ def handle_webhook():
         notify_on_offline_str = os.getenv("NOTIFY_ON_TWITCH_OFFLINE", "False").lower()
         NOTIFY_ON_OFFLINE = notify_on_offline_str == "true"
         if subscription_type == "stream.online" and NOTIFY_ON_ONLINE:
+            # title, category_nameをTwitch APIで補完
+            title_val = event_data.get("title")
+            category_val = event_data.get("category_name")
+            # API補完が必要な場合のみ呼び出し
+            if not title_val or not category_val:
+                channel_info = eventsub.get_channel_information(event_data.get("broadcaster_user_id"))
+                if not title_val:
+                    title_val = channel_info.get("title") or f"{broadcaster_user_name_from_event}の配信"
+                if not category_val:
+                    category_val = channel_info.get("game_name") or ""
             event_context = {
                 "broadcaster_user_id": event_data.get("broadcaster_user_id"),
                 "broadcaster_user_login": broadcaster_user_login_from_event,
                 "broadcaster_user_name": broadcaster_user_name_from_event,
-                "title": event_data.get("title"),
-                "category_name": event_data.get("category_name"),
+                "title": title_val,
+                "category_name": category_val,
                 "game_id": event_data.get("game_id"),
-                "game_name": event_data.get("game_name", event_data.get("category_name")),
+                "game_name": event_data.get("game_name", category_val),
                 "language": event_data.get("language"),
                 "started_at": event_data.get("started_at"),
                 "type": event_data.get("type"),
@@ -63,11 +73,6 @@ def handle_webhook():
                 "tags": event_data.get("tags", []),
                 "stream_url": f"https://twitch.tv/{broadcaster_user_login_from_event}"
             }
-            required_fields = ["title", "category_name"]
-            missing_fields = [field for field in required_fields if not event_context.get(field)]
-            if missing_fields:
-                app.logger.warning(f"Webhook通知 (stream.online): 必須フィールドが不足しています: {', '.join(missing_fields)}. イベントデータ: {event_data}")
-                return jsonify({"error": "Missing title or category_name for stream.online event"}), 400
             try:
                 bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
                 success = bluesky_poster.post_stream_online(event_context=event_context, image_path=os.getenv("BLUESKY_IMAGE_PATH"))
@@ -78,11 +83,14 @@ def handle_webhook():
                 return jsonify({"error": "Internal server error during stream.online processing"}), 500
         elif subscription_type == "stream.offline":
             if NOTIFY_ON_OFFLINE:
+                import datetime
+                ended_at = datetime.datetime.now().isoformat()
                 event_context = {
                     "broadcaster_user_id": event_data.get("broadcaster_user_id"),
                     "broadcaster_user_login": broadcaster_user_login_from_event,
                     "broadcaster_user_name": broadcaster_user_name_from_event,
-                    "channel_url": f"https://twitch.tv/{broadcaster_user_login_from_event}"
+                    "channel_url": f"https://twitch.tv/{broadcaster_user_login_from_event}",
+                    "ended_at": ended_at
                 }
                 app.logger.info(f"stream.offlineイベント処理開始: {event_context.get('broadcaster_user_name')} ({event_context.get('broadcaster_user_login')})")
                 try:
@@ -96,6 +104,30 @@ def handle_webhook():
             else:
                 app.logger.info(f"stream.offline通知は設定によりスキップされました: {broadcaster_user_login_from_event}")
                 return jsonify({"status": "skipped, offline notifications disabled"}), 200
+        elif subscription_type == "channel.raid":
+            # outgoing（自分がRaidを送った場合）のみ通知
+            if event_data.get("from_broadcaster_user_login") == broadcaster_user_login_from_event:
+                raid_to_name = event_data.get("to_broadcaster_user_name")
+                raid_to_login = event_data.get("to_broadcaster_user_login")
+                event_context = {
+                    "broadcaster_user_id": event_data.get("from_broadcaster_user_id"),
+                    "broadcaster_user_login": event_data.get("from_broadcaster_user_login"),
+                    "broadcaster_user_name": event_data.get("from_broadcaster_user_name"),
+                    "channel_url": f"https://twitch.tv/{event_data.get('from_broadcaster_user_login')}",
+                    "ended_at": None,  # Raid時刻は省略またはサーバー時刻を入れてもOK
+                    "raid_to_broadcaster_user_name": raid_to_name,
+                    "raid_to_channel_url": f"https://twitch.tv/{raid_to_login}"
+                }
+                app.logger.info(f"channel.raid(outgoing)イベント処理開始: {event_context.get('broadcaster_user_name')} → {raid_to_name}")
+                try:
+                    bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
+                    # Raid用テンプレートを明示的に指定
+                    success = bluesky_poster.post_stream_offline(event_context=event_context, image_path=None, platform="twitch", template_path="templates/twitch/twitch_raid_template.txt")
+                    app.logger.info(f"Bluesky投稿試行 (channel.raid): {event_context.get('broadcaster_user_login')} → {raid_to_name}, 成功: {success}")
+                    return jsonify({"status": "success, raid notification posted" if success else "bluesky error, raid notification not posted"}), 200
+                except Exception as e:
+                    app.logger.error(f"Bluesky投稿エラー (channel.raid): {str(e)}", exc_info=True)
+                    return jsonify({"error": "Internal server error during channel.raid processing"}), 500
         if subscription_type == "stream.online" and not NOTIFY_ON_ONLINE:
             app.logger.info(f"stream.online通知は設定によりスキップされました: {broadcaster_user_login_from_event}")
             return jsonify({"status": "skipped, online notifications disabled"}), 200

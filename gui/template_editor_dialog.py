@@ -179,6 +179,7 @@ class TemplateEditorDialog(ctk.CTkToplevel):
         ctk.CTkButton(frame_btn, text="キャンセル", command=self.on_cancel, font=DEFAULT_FONT, width=90).pack(side="left")
 
     def _get_file_label(self):
+        # ファイル名以外（特にテンプレート本文）は絶対にセットしないこと
         return f"ファイル: {os.path.basename(self.file_path) if self.file_path else '(未保存)'}"
 
     def get_template_dir(self):
@@ -204,7 +205,7 @@ class TemplateEditorDialog(ctk.CTkToplevel):
                 self.text_area.delete("1.0", tk.END)
                 self.text_area.insert("1.0", text)
                 self.file_path = path
-                self.file_label.configure(text=self._get_file_label())
+                self.file_label.configure(text=self._get_file_label())  # ファイル名のみ表示
                 self.update_preview()
                 # --- 追加: ファイルを開いた後も前面に出す ---
                 self.lift()
@@ -256,7 +257,7 @@ class TemplateEditorDialog(ctk.CTkToplevel):
                 messagebox.showerror("保存エラー", str(e))
                 return
         if self.on_save:
-            self.on_save(tpl)
+            self.on_save(self.file_path)  # ファイルパスを渡す
         self.destroy()
 
     def on_saveas(self):
@@ -277,8 +278,11 @@ class TemplateEditorDialog(ctk.CTkToplevel):
                 with open(path, 'w', encoding='utf-8') as f:
                     f.write(tpl)
                 self.file_path = path
-                self.file_label.configure(text=self._get_file_label())
+                self.file_label.configure(text=self._get_file_label())  # ファイル名のみ表示
                 messagebox.showinfo("保存完了", f"{os.path.basename(path)} に保存しました。")
+                if self.on_save:
+                    self.on_save(self.file_path)  # ファイルパスを渡す
+                self.destroy()
             except Exception as e:
                 messagebox.showerror("保存エラー", str(e))
 
