@@ -5,6 +5,5 @@
 
 Raid先: {{ to_broadcaster_user_name }} ({{ to_broadcaster_user_login }})
 Raid先URL: https://twitch.tv/{{ to_broadcaster_user_login }}
-視聴者数: {{ viewers | default('不明') }}
 
 #Twitch #Raid #配信終了
