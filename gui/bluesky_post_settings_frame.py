@@ -74,8 +74,11 @@ class BlueskyPostSettingsFrame(ctk.CTkFrame):
         # サービス欄にテンプレート編集ボタン（有効化）を追加
         from .template_editor_dialog import TemplateEditorDialog
         def open_template_editor(template_type, initial_text_var):
-            def on_save(new_text):
-                initial_text_var.set(new_text)
+            def on_save(new_path):
+                # 保存したファイルのパスをセット
+                initial_text_var.set(new_path)
+            # TemplateEditorDialogのon_saveにファイルパスを渡すようにする
+            # TemplateEditorDialog側もon_save(tpl)→on_save(self.file_path)に修正が必要
             TemplateEditorDialog(self, template_type=template_type, initial_text=initial_text_var.get(), on_save=on_save)
         for tab_name, template_type, var_attr in [
             ("Twitch", "twitch_online", getattr(self.twitch_frame, "tpl_online", None)),
