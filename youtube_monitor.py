@@ -72,7 +72,7 @@ class YouTubeMonitor(Thread):
         self.initial_wait = initial_wait
         _, _, _, _, youtube_logger, _ = configure_logging()
         self.logger = youtube_logger
-        print(f"[YouTubeMonitor] __init__ called: api_key={api_key}, channel_id={channel_id}, poll_interval={poll_interval}, initial_wait={initial_wait}")
+        self.logger.info("YouTube監視モジュールを起動します。")
 
     def load_latest_videos(self):
         if os.path.exists(LATEST_VIDEOS_PATH):
