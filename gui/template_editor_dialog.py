@@ -7,6 +7,8 @@ import tkinter as tk
 from tkinter import messagebox
 import os
 from tkinter import filedialog
+import jinja2
+import datetime
 
 DEFAULT_FONT = ("Yu Gothic UI", 12, "normal")
 
@@ -71,6 +73,9 @@ TEMPLATE_ARGS = {
         ("Raid先配信者名", "to_broadcaster_user_name"),
         ("Raid先ログイン名", "to_broadcaster_user_login"),
         ("Raid先URL", "to_stream_url"),
+        ("Raid元配信者名", "from_broadcaster_user_name"),
+        ("Raid元ログイン名", "from_broadcaster_user_login"),
+        ("視聴者数", "viewers"),
     ],
     "twitch_raid": [
         ("Raid元配信者名", "from_broadcaster_user_name"),
@@ -152,22 +157,33 @@ class TemplateEditorDialog(ctk.CTkToplevel):
         self.text_area.configure(yscrollcommand=yscroll.set)
         self.text_area.pack(side="left", fill="x", expand=True)
         yscroll.pack(side="right", fill="y")
+        if initial_text:
+            self.text_area.insert("1.0", initial_text)
 
         # テンプレート引数（日本語ラベルのみのボタン群）
         args_frame = ctk.CTkFrame(self)
         args_frame.pack(fill="x", padx=16, pady=(0, 4))
         ctk.CTkLabel(args_frame, text="テンプレート引数:", font=DEFAULT_FONT).pack(anchor="w")
-        btns_frame = ctk.CTkFrame(args_frame)
-        btns_frame.pack(fill="x", pady=(2, 2))
-        # 重複を除外して順番通りにボタンを表示
+        raid_keys = {"to_broadcaster_user_name", "to_broadcaster_user_login", "to_stream_url", "from_broadcaster_user_name", "from_broadcaster_user_login", "raid_url"}
+        has_raid = any(key in raid_keys for _, key in TEMPLATE_ARGS.get(self.template_type, []))
+        btns_frame1 = ctk.CTkFrame(args_frame)
+        btns_frame1.pack(fill="x", pady=(2, 0))
+        if has_raid:
+            btns_frame2 = ctk.CTkFrame(args_frame)
+            btns_frame2.pack(fill="x", pady=(0, 2))
         seen = set()
         for label, key in TEMPLATE_ARGS.get(self.template_type, []):
             if key in seen:
                 continue
             seen.add(key)
-            btn = ctk.CTkButton(btns_frame, text=label, font=("Yu Gothic UI", 13), width=90,
-                                command=lambda k=key: self.insert_arg(k))
-            btn.pack(side="left", padx=4, pady=2)
+            if has_raid and key in raid_keys:
+                btn = ctk.CTkButton(btns_frame2, text=label, font=("Yu Gothic UI", 13), width=90,
+                                    command=lambda k=key: self.insert_arg(k))
+                btn.pack(side="left", padx=4, pady=2)
+            else:
+                btn = ctk.CTkButton(btns_frame1, text=label, font=("Yu Gothic UI", 13), width=90,
+                                    command=lambda k=key: self.insert_arg(k))
+                btn.pack(side="left", padx=4, pady=2)
 
         # プレビュー欄（スクロールバー付き）
         ctk.CTkLabel(self, text="プレビュー:", font=DEFAULT_FONT).pack(anchor="w", padx=16)
@@ -188,10 +204,16 @@ class TemplateEditorDialog(ctk.CTkToplevel):
         # ボタン
         frame_btn = ctk.CTkFrame(self)
         frame_btn.pack(fill="x", padx=16, pady=(0, 12))
-        ctk.CTkButton(frame_btn, text="開く", command=self.on_open, font=DEFAULT_FONT, width=90).pack(side="left", padx=(0, 8))
-        ctk.CTkButton(frame_btn, text="保存", command=self.on_save_click, font=DEFAULT_FONT, width=90).pack(side="left", padx=(0, 8))
-        ctk.CTkButton(frame_btn, text="名前を付けて保存", command=self.on_saveas, font=DEFAULT_FONT, width=140).pack(side="left", padx=(0, 8))
-        ctk.CTkButton(frame_btn, text="キャンセル", command=self.on_cancel, font=DEFAULT_FONT, width=90).pack(side="left")
+        if self.file_path:
+            # 既存テンプレート編集時は「保存」「キャンセル」のみ
+            ctk.CTkButton(frame_btn, text="保存", command=self.on_save_click, font=DEFAULT_FONT, width=90).pack(side="left", padx=(0, 8))
+            ctk.CTkButton(frame_btn, text="キャンセル", command=self.on_cancel, font=DEFAULT_FONT, width=90).pack(side="left")
+        else:
+            # 新規作成時は全ボタン
+            ctk.CTkButton(frame_btn, text="開く", command=self.on_open, font=DEFAULT_FONT, width=90).pack(side="left", padx=(0, 8))
+            ctk.CTkButton(frame_btn, text="保存", command=self.on_save_click, font=DEFAULT_FONT, width=90).pack(side="left", padx=(0, 8))
+            ctk.CTkButton(frame_btn, text="名前を付けて保存", command=self.on_saveas, font=DEFAULT_FONT, width=140).pack(side="left", padx=(0, 8))
+            ctk.CTkButton(frame_btn, text="キャンセル", command=self.on_cancel, font=DEFAULT_FONT, width=90).pack(side="left")
 
     def _get_file_label(self):
         # ファイル名以外（特にテンプレート本文）は絶対にセットしないこと
@@ -248,11 +270,24 @@ class TemplateEditorDialog(ctk.CTkToplevel):
     def update_preview(self, event=None):
         tpl = self.text_area.get("1.0", tk.END).strip()
         ctx = SAMPLE_CONTEXT.get(self.template_type, {})
+        def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
+            if not value:
+                return ''
+            try:
+                if isinstance(value, str):
+                    # すでにフォーマット済み文字列ならそのまま返す
+                    return value
+                return value.strftime(format)
+            except Exception:
+                return str(value)
         try:
-            preview = tpl.format(**ctx)
+            env = jinja2.Environment()
+            env.filters['datetimeformat'] = datetimeformat
+            template = env.from_string(tpl)
+            preview = template.render(**ctx)
             self.preview_label.config(text=preview, fg="#222")
-        except KeyError as e:
-            self.preview_label.config(text=f"[エラー] 未定義の変数: {e}", fg="#d32f2f")
+        except jinja2.exceptions.TemplateError as e:
+            self.preview_label.config(text=f"[エラー] {e}", fg="#d32f2f")
         except Exception as e:
             self.preview_label.config(text=f"[エラー] {e}", fg="#d32f2f")
 
