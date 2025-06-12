@@ -77,8 +77,8 @@ class BlueskyPostSettingsFrame(ctk.CTkFrame):
             def on_save(new_path):
                 # 保存したファイルのパスをセット
                 initial_text_var.set(new_path)
-            # TemplateEditorDialogのon_saveにファイルパスを渡すようにする
-            TemplateEditorDialog(self, template_type=template_type, initial_text=initial_text_var.get(), on_save=on_save)
+            # 新規作成時は空欄でエディタを開く
+            TemplateEditorDialog(self, template_type=template_type, initial_text="", on_save=on_save)
         for tab_name, template_type, var_attr in [
             ("Twitch", "twitch_online", getattr(self.twitch_frame, "tpl_online", None)),
             ("YouTube", "yt_online", getattr(self.youtube_frame, "tpl_online", None)),
