@@ -6,13 +6,14 @@ Stream notify on Bluesky
 """
 
 from datetime import datetime
-from utils import retry_on_exception, is_valid_url, format_datetime_filter, notify_discord_error
+from utils import retry_on_exception, is_valid_url, notify_discord_error
 # is_valid_url: URLがhttp/httpsで始まるか判定するユーティリティ関数。他モジュールからも利用されるため削除不可。
 import os
 import csv
 import logging
 from atproto import Client, exceptions
-from jinja2 import Template
+from jinja2 import Environment, Template
+from utils import format_datetime_filter
 from version_info import __version__
 
 __author__ = "mayuneco(mayunya)"
@@ -69,10 +70,10 @@ def load_template(path=None):
         logger.error(f"テンプレート '{path}' の読み込み中に予期せぬエラー: {e}", exc_info=True)
         template_string = "Error: Failed to load template '{{ template_path }}' due to an unexpected error."
 
-    # Jinja2 Templateオブジェクトを生成
-    template_obj = Template(template_string)
-    # カスタムフィルタをテンプレート環境に追加
-    template_obj.environment.filters['datetimeformat'] = format_datetime_filter
+    # Jinja2 Environmentを使い、グローバルにフィルターを登録
+    env = Environment()
+    env.filters['datetimeformat'] = format_datetime_filter
+    template_obj = env.from_string(template_string)
     return template_obj
 
 
