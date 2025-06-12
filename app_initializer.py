@@ -16,12 +16,13 @@ def initialize_app(app, tunnel_logger):
     twitch_id_ok = os.getenv("TWITCH_CLIENT_ID") and os.getenv("TWITCH_CLIENT_SECRET") and os.getenv("TWITCH_BROADCASTER_ID")
     twitch_ready = twitch_enabled and twitch_id_ok
     youtube_enabled = os.getenv("NOTIFY_ON_YT_ONLINE", "False").lower() == "true" or \
-                      os.getenv("NOTIFY_ON_YT_NEWVIDEO", "False").lower() == "true"
+        os.getenv("NOTIFY_ON_YT_OFFLINE", "False").lower() == "true" or \
+        os.getenv("NOTIFY_ON_YT_NEWVIDEO", "False").lower() == "true"
     youtube_id_ok = os.getenv("YOUTUBE_API_KEY") and os.getenv("YOUTUBE_CHANNEL_ID")
     youtube_ready = youtube_enabled and youtube_id_ok
-    nico_enabled = os.getenv("NOTIFY_ON_NICONICO_ONLINE", "False").lower() == "true" or \
-                   os.getenv("NOTIFY_ON_NICONICO_NEW_VIDEO", "False").lower() == "true"
-    nico_id_ok = os.getenv("NICONICO_USER_ID")
+    nico_enabled = os.getenv("NOTIFY_ON_NICO_ONLINE", "False").lower() == "true" or \
+                   os.getenv("NOTIFY_ON_NICO_NEWVIDEO", "False").lower() == "true"
+    nico_id_ok = bool(os.getenv("NICONICO_USER_ID"))
     nico_ready = nico_enabled and nico_id_ok
     if not (twitch_ready or youtube_ready or nico_ready):
         logger.critical("Twitch/YouTube/ニコニコのいずれも有効な設定がありません。アプリケーションは起動できません。")
@@ -37,10 +38,12 @@ def initialize_app(app, tunnel_logger):
         webhook_url = os.getenv("WEBHOOK_CALLBACK_URL_TEMPORARY")
     else:
         webhook_url = os.getenv("WEBHOOK_CALLBACK_URL")
-    cleanup_eventsub_subscriptions(webhook_url, logger_to_use=logger)
+    # tunnel_loggerの状態をデバッグ出力
+    logger.debug(f"[initialize_app] tunnel_logger: {tunnel_logger} type={type(tunnel_logger)} handlers={tunnel_logger.handlers if hasattr(tunnel_logger, 'handlers') else 'N/A'}")
     tunnel_proc = None
     if not disable_tunnel_autostart:
         tunnel_proc = start_tunnel_and_monitor(tunnel_logger)
+        logger.debug(f"[initialize_app] start_tunnel_and_monitor returned: {tunnel_proc}")
         if not tunnel_proc:
             tunnel_logger.critical("トンネルの起動に失敗しました。アプリケーションは起動できません。")
             return False
@@ -48,6 +51,7 @@ def initialize_app(app, tunnel_logger):
         logger.info("DISABLE_TUNNEL_AUTOSTARTが有効のため、トンネル自動起動をスキップします。")
     # --- Twitch初期化 ---
     if twitch_ready:
+        cleanup_eventsub_subscriptions(webhook_url, logger_to_use=logger)
         setup_broadcaster_id(logger_to_use=logger)
         TWITCH_APP_ACCESS_TOKEN = get_valid_app_access_token(logger_to_use=logger)
         if not TWITCH_APP_ACCESS_TOKEN:
