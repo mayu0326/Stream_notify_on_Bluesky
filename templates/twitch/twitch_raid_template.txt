@@ -1,9 +1,0 @@
-🚀 Twitch Raid 終了通知
-
-{{ from_broadcaster_user_name | default('配信者名不明') }} さんが配信を終了し、
-{{ to_broadcaster_user_name | default('Raid先不明') }} さんのチャンネルにRaidしました！
-
-Raid先: {{ to_broadcaster_user_name }} ({{ to_broadcaster_user_login }})
-Raid先URL: https://twitch.tv/{{ to_broadcaster_user_login }}
-
-#Twitch #Raid #配信終了

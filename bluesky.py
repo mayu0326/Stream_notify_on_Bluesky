@@ -216,26 +216,33 @@ class BlueskyPoster:
         wait_seconds=RETRY_WAIT,
         exceptions=(exceptions.AtProtocolError,)
     )
-    def post_stream_offline(self, event_context: dict, image_path=None, platform="twitch"):
+    def post_stream_offline(self, event_context: dict, image_path=None, platform="twitch", template_path=None):
         """
         配信終了通知をBlueskyに投稿する（Twitch/YouTube/ニコニコ対応）
         """
-        if platform == "twitch":
-            template_path = os.getenv(
-                "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
-            required_keys = ["broadcaster_user_name", "broadcaster_user_login", "channel_url"]
-        elif platform == "youtube" or platform == "yt_nico":
-            template_path = os.getenv(
-                "BLUESKY_YT_OFFLINE_TEMPLATE_PATH", "templates/yt_offline_template.txt")
-            required_keys = ["title", "channel_name", "channel_url"]
-        elif platform == "niconico":
-            template_path = os.getenv(
-                "BLUESKY_NICO_OFFLINE_TEMPLATE_PATH", "templates/nico_offline_template.txt")
-            required_keys = ["title", "channel_name", "channel_url"]
+        # --- Raid終了時やchannel.raid用のテンプレートパス指定に対応 ---
+        if not template_path:
+            if platform == "twitch":
+                template_path = os.getenv(
+                    "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+            elif platform == "youtube" or platform == "yt_nico":
+                template_path = os.getenv(
+                    "BLUESKY_YT_OFFLINE_TEMPLATE_PATH", "templates/yt_offline_template.txt")
+            elif platform == "niconico":
+                template_path = os.getenv(
+                    "BLUESKY_NICO_OFFLINE_TEMPLATE_PATH", "templates/nico_offline_template.txt")
+            else:
+                template_path = os.getenv(
+                    "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
+        # --- 必須キー: 通常終了 or Raid終了で分岐 ---
+        if template_path and "raid" in template_path:
+            # Raidテンプレート用
+            required_keys = [
+                "from_broadcaster_user_name", "from_broadcaster_user_login", "to_broadcaster_user_name", "to_broadcaster_user_login", "raid_url"
+            ]
         else:
-            template_path = os.getenv(
-                "BLUESKY_TW_OFFLINE_TEMPLATE_PATH", "templates/twitch_offline_template.txt")
-            required_keys = ["title", "channel_url"]
+            # 通常の配信終了
+            required_keys = ["broadcaster_user_name", "broadcaster_user_login", "channel_url"]
         # テンプレートファイルがなければデフォルトテンプレートにフォールバック
         if not template_path or not os.path.isfile(template_path):
             logger.warning(f"配信終了テンプレートファイルが見つかりません: {template_path}. デフォルトテンプレートにフォールバックします。")
@@ -261,9 +268,9 @@ class BlueskyPoster:
             # 画像なしで投稿
             self.client.send_post(text=post_text)
             logger.info(
-                f"Blueskyへの自動投稿成功 (stream.offline): {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}")
+                f"Blueskyへの自動投稿成功 (stream.offline): {event_context.get('broadcaster_user_name', event_context.get('from_broadcaster_user_name', 'N/A'))}")
             audit_logger.info(
-                f"Bluesky投稿成功 (stream.offline): User - {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}")
+                f"Bluesky投稿成功 (stream.offline): User - {event_context.get('broadcaster_user_name', event_context.get('from_broadcaster_user_name', 'N/A'))}")
             success = True
             return True
         except exceptions.AtProtocolError as e:
@@ -278,10 +285,10 @@ class BlueskyPoster:
         finally:
             # 投稿履歴を記録
             self._write_post_history(
-                title=f"配信終了: {event_context.get('broadcaster_user_name', event_context.get('channel_name', 'N/A'))}",
+                title=f"配信終了: {event_context.get('broadcaster_user_name', event_context.get('from_broadcaster_user_name', 'N/A'))}",
                 category="Offline",
                 url=event_context.get(
-                    "channel_url", f"https://twitch.tv/{event_context.get('broadcaster_user_login', '')}"),
+                    "channel_url", event_context.get("raid_url", f"https://twitch.tv/{event_context.get('broadcaster_user_login', event_context.get('to_broadcaster_user_login', ''))}")),
                 success=success,
                 event_type="offline"
             )
