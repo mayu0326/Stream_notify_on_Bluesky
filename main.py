@@ -20,6 +20,9 @@ Stream notify on Bluesky
 # もし同梱されていない場合は、フリーソフトウェア財団までご請求ください。
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+from dotenv import load_dotenv
+load_dotenv("settings.env")
+
 from app_initializer import initialize_app
 from tunnel_manager import stop_tunnel_and_monitor
 from webhook_routes import webhook_bp, handle_404

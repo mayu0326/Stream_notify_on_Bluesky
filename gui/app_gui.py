@@ -21,6 +21,7 @@ from gui.niconico_notice_frame import NiconicoNoticeFrame
 from gui.twitch_notice_frame import TwitchNoticeFrame
 from gui.youtube_notice_frame import YouTubeNoticeFrame
 import configparser
+from dotenv import load_dotenv
 
 from version_info import __version__
 
@@ -270,6 +271,7 @@ def is_first_setup():
 
 
 if __name__ == "__main__":
+    load_dotenv("../settings.env")
     if is_first_setup():
         # 設定ファイルがなければセットアップウィザードをダークモード(system)で起動
         ctk.set_appearance_mode("system")
