@@ -83,13 +83,6 @@ class TwitchNoticeFrame(ctk.CTkFrame):
         self.lbl_offline_tpl.grid(row=4, column=1, sticky="w")
         ctk.CTkButton(self, text="テンプレート編集", command=self.open_template_editor_offline, font=DEFAULT_FONT, width=140).grid(row=5, column=0, sticky="w", pady=(0, 10))
         ctk.CTkButton(self, text="テンプレート変更...", command=self.change_template_file_offline, font=DEFAULT_FONT, width=140).grid(row=5, column=1, sticky="w", pady=(0, 10))
-        # --- 下部にテンプレート作成ボタン ---
-        from .template_editor_dialog import TemplateEditorDialog
-        def create_new_template():
-            def on_save(new_path):
-                pass  # 新規作成時は何もしない
-            TemplateEditorDialog(self, template_type="twitch_offline", initial_text="", on_save=on_save, initial_path=None)
-        ctk.CTkButton(self, text="テンプレート作成", command=create_new_template, font=DEFAULT_FONT, width=180).grid(row=20, column=1, sticky="e", pady=(20, 10))
         ctk.CTkLabel(self, text="画像ファイル:", font=DEFAULT_FONT).grid(row=6, column=0, columnspan=2, sticky="w")
         self.img_preview = ctk.CTkLabel(self, width=200, height=112.5, text="", fg_color="white", image=None)
         self.img_preview._image = None  # Prevent garbage collection, 明示的に初期化

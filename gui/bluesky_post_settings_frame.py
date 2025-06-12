@@ -71,14 +71,13 @@ class BlueskyPostSettingsFrame(ctk.CTkFrame):
         self.nico_frame = NiconicoNoticeFrame(tabview)
         self.nico_frame.pack(fill="both", expand=True, padx=10, pady=10, in_=tabview.tab("ニコニコ"))
 
-        # サービス欄にテンプレート編集ボタン（有効化）を追加
+        # サービス欄にテンプレート作成ボタン（有効化）を追加
         from .template_editor_dialog import TemplateEditorDialog
-        def open_template_editor(template_type, initial_text_var):
+        def open_template_creator(template_type, initial_text_var):
             def on_save(new_path):
                 # 保存したファイルのパスをセット
                 initial_text_var.set(new_path)
             # TemplateEditorDialogのon_saveにファイルパスを渡すようにする
-            # TemplateEditorDialog側もon_save(tpl)→on_save(self.file_path)に修正が必要
             TemplateEditorDialog(self, template_type=template_type, initial_text=initial_text_var.get(), on_save=on_save)
         for tab_name, template_type, var_attr in [
             ("Twitch", "twitch_online", getattr(self.twitch_frame, "tpl_online", None)),
@@ -87,9 +86,9 @@ class BlueskyPostSettingsFrame(ctk.CTkFrame):
         ]:
             tab = tabview.tab(tab_name)
             if var_attr is not None:
-                edit_btn = ctk.CTkButton(tab, text="テンプレート編集", state="normal", font=DEFAULT_FONT, width=180,
-                                         command=lambda t=template_type, v=var_attr: open_template_editor(t, v))
-                edit_btn.pack(anchor="ne", padx=10, pady=(5, 0))
+                create_btn = ctk.CTkButton(tab, text="テンプレート作成", state="normal", font=DEFAULT_FONT, width=180,
+                                         command=lambda t=template_type, v=var_attr: open_template_creator(t, v))
+                create_btn.pack(anchor="ne", padx=10, pady=(5, 0))
 
         # タブボタンのサイズとフォントを変更
         for button in tabview._segmented_button._buttons_dict.values():
