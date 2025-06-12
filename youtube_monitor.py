@@ -64,6 +64,14 @@ class YouTubeMonitor(Thread):
         import service_monitor
         poll_interval_online = int(os.getenv("YOUTUBE_POLL_INTERVAL_ONLINE", 30))
         poll_interval_offline = int(os.getenv("YOUTUBE_POLL_INTERVAL_OFFLINE", 180))
+        # --- 起動後30秒待機し、公開設定がOnなら1度だけ新着動画チェック ---
+        time.sleep(30)
+        if os.getenv("NOTIFY_ON_YOUTUBE_NEW_VIDEO", "False") == "True":
+            video_id = self.get_latest_video_id()
+            if video_id and video_id != self.last_video_id:
+                self.on_new_video(video_id)
+                self.last_video_id = video_id
+        # --- 通常の監視ループ ---
         while not self.shutdown_event.is_set():
             try:
                 # ライブ配信の有無と詳細情報を確認
@@ -76,9 +84,13 @@ class YouTubeMonitor(Thread):
 
                 # 新着動画の有無を確認
                 video_id = self.get_latest_video_id()
-                if video_id and video_id != self.last_video_id:
-                    self.on_new_video(video_id)
-                    self.last_video_id = video_id
+                if video_id:
+                    if video_id != self.last_video_id:
+                        self.on_new_video(video_id)
+                        self.last_video_id = video_id
+                else:
+                    # 公開動画がなくなった場合（非公開化等）、記録をリセット
+                    self.last_video_id = None
 
             except Exception as e:
                 print(f"[YouTubeMonitor] エラー発生: {e}")
@@ -117,15 +129,26 @@ class YouTubeMonitor(Thread):
 
     def get_latest_video_id(self):
         """
-        チャンネルの最新動画IDを取得。
+        チャンネルの最新動画IDを取得（公開動画のみ）。
         """
         url = (
             f"https://www.googleapis.com/youtube/v3/search"
-            f"?part=snippet&channelId={self.channel_id}&order=date&type=video&key={self.api_key}&maxResults=1"
+            f"?part=snippet&channelId={self.channel_id}&order=date&type=video&key={self.api_key}&maxResults=3"
         )
         resp = requests.get(url)
         data = resp.json()
         items = data.get("items", [])
-        if items:
-            return items[0]["id"]["videoId"]
+        for item in items:
+            video_id = item["id"].get("videoId")
+            if not video_id:
+                continue
+            # 動画の公開状態を取得
+            video_url = (
+                f"https://www.googleapis.com/youtube/v3/videos?id={video_id}&part=status&key={self.api_key}"
+            )
+            vresp = requests.get(video_url)
+            vdata = vresp.json()
+            vitems = vdata.get("items", [])
+            if vitems and vitems[0]["status"]["privacyStatus"] == "public":
+                return video_id
         return None
