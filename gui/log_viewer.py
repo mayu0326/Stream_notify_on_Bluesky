@@ -42,6 +42,8 @@ LOG_FILES = [
     ("監査ログ (audit.log)", os.path.join(ROOT_DIR, "logs/audit.log")),
     ("エラーログ (error.log)", os.path.join(ROOT_DIR, "logs/error.log")),
     ("トンネルログ (tunnel.log)", os.path.join(ROOT_DIR, "logs/tunnel.log")),
+    ("YouTubeログ (youtube.log)", os.path.join(ROOT_DIR, "logs/youtube.log")),
+    ("ニコニコログ (niconico.log)", os.path.join(ROOT_DIR, "logs/niconico.log")),
     ("Bluesky投稿履歴 (post_history.csv)", os.path.join(ROOT_DIR, "logs/post_history.csv")),
 ]
 

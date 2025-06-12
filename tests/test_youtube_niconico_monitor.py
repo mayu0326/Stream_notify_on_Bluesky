@@ -46,6 +46,7 @@ def dummy_youtube_monitor(monkeypatch):
         poll_interval=0.1,
         on_live=lambda info: setattr(monitor, "live_called", True),
         on_new_video=lambda vid: setattr(monitor, "video_called", True),
+        initial_wait=0  # テスト時は初回待機なし
     )
     monitor.live_called = False
     monitor.video_called = False
