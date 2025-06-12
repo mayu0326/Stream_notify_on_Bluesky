@@ -13,10 +13,11 @@ DEFAULT_FONT = ("Yu Gothic UI", 12, "normal")
 # サンプル event_context（サービス・通知種別ごとに適宜拡張）
 SAMPLE_CONTEXT = {
     "twitch_online": {
-        "language": "日本語(japanese)",
-        "user_name": "hogehoge",
+        "broadcaster_user_name": "hogehoge",
         "title": "テスト配信",
         "game_name": "ゲームタイトル",
+        "category_name": "カテゴリ名",
+        "started_at": "開始日時",
         "url": "https://twitch.tv/sample",
     },
     "yt_online": {
@@ -48,7 +49,9 @@ SAMPLE_CONTEXT = {
 }
 # 除外リスト
 TEMPLATE_VAR_BLACKLIST = {
-    "twitch_online": {"broadcaster_user_id", "game_id", "started_at", "type", "is_mature", "tags"},
+    "twitch_online": {"id", "broadcaster_user_id", "type"},
+    "twitch_offline": {"broadcaster_user_id"},
+    "twitch_raid": {"from_broadcaster_user_id", "to_broadcaster_user_id", "viewers"},
     "yt_online": {"channel_id", "channel_name", "thumbnail_url", "description", "start_time"},
 }
 # --- テンプレート引数（日本語ラベル付きボタン群）定義 ---
@@ -58,12 +61,24 @@ TEMPLATE_ARGS = {
         ("タイトル", "title"),
         ("カテゴリ", "category_name"),
         ("ゲーム名", "game_name"),
-        ("言語", "language"),
+        ("開始日時", "started_at"),
         ("URL", "stream_url"),
     ],
     "twitch_offline": [
         ("配信者名", "broadcaster_user_name"),
-        ("URL", "stream_url"),
+        ("終了日時", "ended_at"),
+        ("URL", "channel_url"),
+        ("Raid先配信者名", "to_broadcaster_user_name"),
+        ("Raid先ログイン名", "to_broadcaster_user_login"),
+        ("Raid先URL", "to_stream_url"),
+    ],
+    "twitch_raid": [
+        ("Raid元配信者名", "from_broadcaster_user_name"),
+        ("Raid元ログイン名", "from_broadcaster_user_login"),
+        ("Raid先配信者名", "to_broadcaster_user_name"),
+        ("Raid先ログイン名", "to_broadcaster_user_login"),
+        ("Raid先URL", "raid_url"),
+        ("視聴者数", "viewers"),
     ],
     # --- YouTube用を追加 ---
     "yt_online": [

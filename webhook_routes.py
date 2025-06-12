@@ -3,8 +3,15 @@ import eventsub
 import bluesky  # BlueskyPosterはbluesky経由で参照
 from markupsafe import escape
 import os
+import threading
+import time
 
 webhook_bp = Blueprint('webhook', __name__)
+
+# --- 直近のRaidイベントを保存するための簡易メモリキャッシュ ---
+raid_event_cache = {}
+raid_event_cache_lock = threading.Lock()
+RAID_CACHE_EXPIRE_SEC = 30  # 30秒以内のRaidを有効とみなす
 
 @webhook_bp.route('/favicon.ico')
 def favicon():
@@ -85,13 +92,25 @@ def handle_webhook():
             if NOTIFY_ON_OFFLINE:
                 import datetime
                 ended_at = datetime.datetime.now().isoformat()
+                # --- 直近のRaidイベントと突き合わせて判定 ---
+                raid_info = None
+                with raid_event_cache_lock:
+                    raid_entry = raid_event_cache.get(broadcaster_user_login_from_event)
+                    if raid_entry and (time.time() - raid_entry["timestamp"] <= RAID_CACHE_EXPIRE_SEC):
+                        raid_info = raid_entry
+                        # 使い終わったらキャッシュから削除
+                        del raid_event_cache[broadcaster_user_login_from_event]
                 event_context = {
                     "broadcaster_user_id": event_data.get("broadcaster_user_id"),
                     "broadcaster_user_login": broadcaster_user_login_from_event,
                     "broadcaster_user_name": broadcaster_user_name_from_event,
                     "channel_url": f"https://twitch.tv/{broadcaster_user_login_from_event}",
-                    "ended_at": ended_at
+                    "ended_at": ended_at,
                 }
+                if raid_info:
+                    event_context["to_broadcaster_user_name"] = raid_info["to_broadcaster_user_name"]
+                    event_context["to_broadcaster_user_login"] = raid_info["to_broadcaster_user_login"]
+                    event_context["to_stream_url"] = raid_info["to_stream_url"]
                 app.logger.info(f"stream.offlineイベント処理開始: {event_context.get('broadcaster_user_name')} ({event_context.get('broadcaster_user_login')})")
                 try:
                     bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
@@ -109,21 +128,31 @@ def handle_webhook():
             if event_data.get("from_broadcaster_user_login") == broadcaster_user_login_from_event:
                 raid_to_name = event_data.get("to_broadcaster_user_name")
                 raid_to_login = event_data.get("to_broadcaster_user_login")
+                # --- Raidイベントをキャッシュに保存 ---
+                with raid_event_cache_lock:
+                    raid_event_cache[broadcaster_user_login_from_event] = {
+                        "to_broadcaster_user_name": raid_to_name,
+                        "to_broadcaster_user_login": raid_to_login,
+                        "to_stream_url": f"https://twitch.tv/{raid_to_login}" if raid_to_login else None,
+                        "timestamp": time.time()
+                    }
                 event_context = {
-                    "broadcaster_user_id": event_data.get("from_broadcaster_user_id"),
-                    "broadcaster_user_login": event_data.get("from_broadcaster_user_login"),
-                    "broadcaster_user_name": event_data.get("from_broadcaster_user_name"),
-                    "channel_url": f"https://twitch.tv/{event_data.get('from_broadcaster_user_login')}",
-                    "ended_at": None,  # Raid時刻は省略またはサーバー時刻を入れてもOK
-                    "raid_to_broadcaster_user_name": raid_to_name,
-                    "raid_to_channel_url": f"https://twitch.tv/{raid_to_login}"
+                    "from_broadcaster_user_id": event_data.get("from_broadcaster_user_id"),
+                    "from_broadcaster_user_login": event_data.get("from_broadcaster_user_login"),
+                    "from_broadcaster_user_name": event_data.get("from_broadcaster_user_name"),
+                    "to_broadcaster_user_id": event_data.get("to_broadcaster_user_id"),
+                    "to_broadcaster_user_login": raid_to_login,
+                    "to_broadcaster_user_name": raid_to_name,
+                    "raid_url": f"https://twitch.tv/{raid_to_login}" if raid_to_login else None,
+                    "viewers": event_data.get("viewers"),
+                    "ended_at": None  # Raid時刻は省略またはサーバー時刻を入れてもOK
                 }
-                app.logger.info(f"channel.raid(outgoing)イベント処理開始: {event_context.get('broadcaster_user_name')} → {raid_to_name}")
+                app.logger.info(f"channel.raid(outgoing)イベント処理開始: {event_context.get('from_broadcaster_user_name')} → {raid_to_name}")
                 try:
                     bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
                     # Raid用テンプレートを明示的に指定
                     success = bluesky_poster.post_stream_offline(event_context=event_context, image_path=None, platform="twitch", template_path="templates/twitch/twitch_raid_template.txt")
-                    app.logger.info(f"Bluesky投稿試行 (channel.raid): {event_context.get('broadcaster_user_login')} → {raid_to_name}, 成功: {success}")
+                    app.logger.info(f"Bluesky投稿試行 (channel.raid): {event_context.get('from_broadcaster_user_login')} → {raid_to_name}, 成功: {success}")
                     return jsonify({"status": "success, raid notification posted" if success else "bluesky error, raid notification not posted"}), 200
                 except Exception as e:
                     app.logger.error(f"Bluesky投稿エラー (channel.raid): {str(e)}", exc_info=True)
