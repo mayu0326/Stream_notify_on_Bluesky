@@ -75,6 +75,8 @@ if __name__ == "__main__":
                 time.sleep(1)
         except KeyboardInterrupt:
             signal_handler(signal.SIGINT, None)
+        # CUI終了時にトンネルも停止
+        stop_tunnel_and_monitor()
         cleanup_application()
     else:
         sys.exit(1)
