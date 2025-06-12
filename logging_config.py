@@ -35,7 +35,23 @@ __app_version__ = __version__
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+# --- シングルトン用キャッシュ ---
+_configure_logging_cache = {}
+
+
 def configure_logging(app=None):
+    # シングルトン: 既に初期化済みならキャッシュを返す
+    global _configure_logging_cache
+    if not app and _configure_logging_cache:
+        return (
+            _configure_logging_cache["logger"],
+            _configure_logging_cache["app_logger_handlers"],
+            _configure_logging_cache["audit_logger"],
+            _configure_logging_cache["tunnel_logger"],
+            _configure_logging_cache["youtube_logger"],
+            _configure_logging_cache["niconico_logger"]
+        )
+
     # 環境設定ファイルの場所を指定し、環境変数を読み込む
     env_path = Path(__file__).parent / "settings.env"
     load_dotenv(dotenv_path=env_path)
@@ -197,6 +213,36 @@ def configure_logging(app=None):
     tunnel_file_handler.setFormatter(tunnel_format)
     tunnel_logger.addHandler(tunnel_file_handler)
 
+    # YouTube専用ロガー
+    youtube_logger = logging.getLogger("YouTubeLogger")
+    youtube_logger.setLevel(log_level)
+    if not any(isinstance(h, TimedRotatingFileHandler) and getattr(h, 'baseFilename', '').endswith('youtube.log') for h in youtube_logger.handlers):
+        yt_file_handler = FlushTimedRotatingFileHandler(
+            "logs/youtube.log",
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        yt_file_handler.setLevel(log_level)
+        yt_file_handler.setFormatter(error_format)
+        youtube_logger.addHandler(yt_file_handler)
+
+    # Niconico専用ロガー
+    niconico_logger = logging.getLogger("NiconicoLogger")
+    niconico_logger.setLevel(log_level)
+    if not any(isinstance(h, TimedRotatingFileHandler) and getattr(h, 'baseFilename', '').endswith('niconico.log') for h in niconico_logger.handlers):
+        nico_file_handler = FlushTimedRotatingFileHandler(
+            "logs/niconico.log",
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        nico_file_handler.setLevel(log_level)
+        nico_file_handler.setFormatter(error_format)
+        niconico_logger.addHandler(nico_file_handler)
+
     # Flaskアプリが渡された場合は、Flaskのロガーにも同じハンドラを追加
     if app is not None:
         app.logger.handlers.clear()  # Flaskデフォルトハンドラをクリア
@@ -205,4 +251,20 @@ def configure_logging(app=None):
         app.logger.setLevel(log_level)
         app.logger.propagate = False
 
-    return logger, app_logger_handlers, audit_logger, tunnel_logger
+    # --- シングルトンキャッシュに保存 ---
+    if not app:
+        _configure_logging_cache = {
+            "logger": logger,
+            "app_logger_handlers": app_logger_handlers,
+            "audit_logger": audit_logger,
+            "tunnel_logger": tunnel_logger,
+            "youtube_logger": youtube_logger,
+            "niconico_logger": niconico_logger,
+        }
+    return logger, app_logger_handlers, audit_logger, tunnel_logger, youtube_logger, niconico_logger
+
+# --- flush付きハンドラ ---
+class FlushTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()

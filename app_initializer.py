@@ -7,7 +7,7 @@ import os
 
 def initialize_app(app, tunnel_logger):
     # ロギング設定
-    logger, app_logger_handlers, audit_logger, tunnel_logger = configure_logging(app)
+    logger, app_logger_handlers, audit_logger, tunnel_logger, youtube_logger, niconico_logger = configure_logging(app)
     WEBHOOK_SECRET = rotate_secret_if_needed(logger)
     os.environ["WEBHOOK_SECRET"] = WEBHOOK_SECRET
     # --- サービス有効判定 ---
@@ -15,8 +15,8 @@ def initialize_app(app, tunnel_logger):
                      os.getenv("NOTIFY_ON_TWITCH_OFFLINE", "False").lower() == "true"
     twitch_id_ok = os.getenv("TWITCH_CLIENT_ID") and os.getenv("TWITCH_CLIENT_SECRET") and os.getenv("TWITCH_BROADCASTER_ID")
     twitch_ready = twitch_enabled and twitch_id_ok
-    youtube_enabled = os.getenv("NOTIFY_ON_YOUTUBE_ONLINE", "False").lower() == "true" or \
-                      os.getenv("NOTIFY_ON_YOUTUBE_NEW_VIDEO", "False").lower() == "true"
+    youtube_enabled = os.getenv("NOTIFY_ON_YT_ONLINE", "False").lower() == "true" or \
+                      os.getenv("NOTIFY_ON_YT_NEWVIDEO", "False").lower() == "true"
     youtube_id_ok = os.getenv("YOUTUBE_API_KEY") and os.getenv("YOUTUBE_CHANNEL_ID")
     youtube_ready = youtube_enabled and youtube_id_ok
     nico_enabled = os.getenv("NOTIFY_ON_NICONICO_ONLINE", "False").lower() == "true" or \
