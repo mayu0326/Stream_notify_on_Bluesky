@@ -9,6 +9,7 @@ from main import app
 import os
 import pytest
 from unittest.mock import patch, MagicMock
+from unittest import mock
 from version_info import __version__
 
 __author__ = "mayuneco(mayunya)"
@@ -246,7 +247,7 @@ class TestWebhookHandler:
         mock_poster_instance.post_stream_online.assert_not_called()
 
     def test_webhook_stream_online_missing_fields(self, client, monkeypatch):
-        # 必須フィールド(title)が不足している場合のテスト
+        # 必須フィールド(title)が不足している場合でもAPI補完・デフォルト値で200が返ることをテスト
         monkeypatch.setattr("eventsub.verify_signature", lambda req: True)
         monkeypatch.setenv("NOTIFY_ON_TWITCH_ONLINE", "True")
 
@@ -256,10 +257,9 @@ class TestWebhookHandler:
         }
         response = client.post(
             "/webhook", headers=self.COMMON_HEADERS, json=payload_missing_title)
-        assert response.status_code == 400
+        assert response.status_code == 200
         json_data = response.get_json()
-        assert "Missing title or category_name for stream.online event" in json_data.get(
-            "error", "")
+        assert "status" in json_data
 
     # === stream.offline のテスト ===
 
@@ -297,7 +297,8 @@ class TestWebhookHandler:
             "broadcaster_user_id": payload_event_data.get("broadcaster_user_id"),
             "broadcaster_user_login": derived_broadcaster_login,
             "broadcaster_user_name": derived_broadcaster_name,
-            "channel_url": f"https://twitch.tv/{derived_broadcaster_login}"
+            "channel_url": f"https://twitch.tv/{derived_broadcaster_login}",
+            "ended_at": mock.ANY,  # ended_atは現在時刻が入るためmock.ANYで許容
         }
 
         mock_poster_instance.post_stream_offline.assert_called_once_with(

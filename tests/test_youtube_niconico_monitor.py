@@ -83,25 +83,24 @@ def dummy_niconico_monitor(monkeypatch):
     monitor.live_called = False
     monitor.video_called = False
 
-    def fake_get_latest_live_id(self):
-        # 1回だけ生放送IDを返す
-        if not hasattr(self, "_called_live"):
-            self._called_live = True
-            return "dummy_live_id"
-        return "dummy_live_id"
+    def fake_entry(kind):
+        class DummyEntry:
+            id = f"dummy_{kind}_id"
+            title = f"dummy_{kind}_title"
+            author = f"dummy_{kind}_author"
+            published = "2025-01-01T00:00:00"
+            link = f"https://example.com/{kind}"
+        return DummyEntry()
 
-    def fake_get_latest_video_id(self):
-        # 1回だけ動画IDを返す
-        if not hasattr(self, "_called_video"):
-            self._called_video = True
-            return "dummy_video_id"
-        return "dummy_video_id"
+    def fake_get_latest_live_entry(self):
+        return fake_entry("live")
+
+    def fake_get_latest_video_entry(self):
+        return fake_entry("video")
 
     # モックメソッドをNiconicoMonitorに差し替え
-    monkeypatch.setattr(NiconicoMonitor, "get_latest_live_id",
-                        fake_get_latest_live_id)
-    monkeypatch.setattr(
-        NiconicoMonitor, "get_latest_video_id", fake_get_latest_video_id)
+    monkeypatch.setattr(NiconicoMonitor, "get_latest_live_entry", fake_get_latest_live_entry)
+    monkeypatch.setattr(NiconicoMonitor, "get_latest_video_entry", fake_get_latest_video_entry)
     return monitor
 
 
