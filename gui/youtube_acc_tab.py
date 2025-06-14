@@ -145,11 +145,19 @@ def create_youtube_tab(parent):
             label_key_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
             label_key_status.configure(text="(未入力可)", font=DESC_FONT, text_color="gray")
-        if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
-            label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
+        # --- ここから追加: APIキー未入力時はUC形式のみ許可 ---
+        if not key:
+            if not (channel and channel_valid and channel_valid.startswith("UC")):
+                label_channel_status.configure(text="✗ UC形式IDのみ可", font=DESC_FONT, text_color="red")
+                ok = False
+            else:
+                label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
-            label_channel_status.configure(text="✗", font=DESC_FONT, text_color="red")
-            ok = False
+            if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
+                label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
+            else:
+                label_channel_status.configure(text="✗", font=DESC_FONT, text_color="red")
+                ok = False
         # ポーリング間隔のバリデーション（分単位・最小値）
         for v, entry, minval in zip([poll, poll_online], [entry_poll, entry_poll_online], [30, 45]):
             if not (v.isdigit() and int(v) >= minval):

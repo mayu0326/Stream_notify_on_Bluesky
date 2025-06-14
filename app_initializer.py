@@ -18,8 +18,11 @@ def initialize_app(app, tunnel_logger):
     youtube_enabled = os.getenv("NOTIFY_ON_YT_ONLINE", "False").lower() == "true" or \
         os.getenv("NOTIFY_ON_YT_OFFLINE", "False").lower() == "true" or \
         os.getenv("NOTIFY_ON_YT_NEWVIDEO", "False").lower() == "true"
-    youtube_id_ok = os.getenv("YOUTUBE_API_KEY") and os.getenv("YOUTUBE_CHANNEL_ID")
+    # ここを修正: APIキーがなくてもチャンネルIDがあればOK
+    youtube_id_ok = os.getenv("YOUTUBE_CHANNEL_ID")
     youtube_ready = youtube_enabled and youtube_id_ok
+    if youtube_ready and not os.getenv("YOUTUBE_API_KEY"):
+        logger.info("YouTube APIキーが未設定のためRSS方式で動作します。YouTube Data API機能は無効です。")
     nico_enabled = os.getenv("NOTIFY_ON_NICO_ONLINE", "False").lower() == "true" or \
                    os.getenv("NOTIFY_ON_NICO_NEWVIDEO", "False").lower() == "true"
     nico_id_ok = bool(os.getenv("NICONICO_USER_ID"))
