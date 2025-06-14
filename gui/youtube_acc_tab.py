@@ -33,6 +33,7 @@ import customtkinter as ctk
 from dotenv import load_dotenv
 import tkinter as tk
 import re
+import string
 
 DEFAULT_FONT = ("Yu Gothic UI", 15, "normal")
 TITLE_FONT = ("Yu Gothic UI", 17, "normal")
@@ -128,6 +129,9 @@ def create_youtube_tab(parent):
         if re.fullmatch(r'@([\w\-]+)', text):
             return text
         return None
+    def is_valid_api_key(key):
+        # Google公式のAPIキー形式: 'AIza'で始まり39～50文字、英数字・アンダースコア・ハイフン
+        return re.fullmatch(r'^AIza[0-9A-Za-z_\-]{35,45}$', key) is not None
     # --- バリデーション修正 ---
     def validate_youtube():
         key = entry_key.get().strip()
@@ -145,14 +149,16 @@ def create_youtube_tab(parent):
             label_key_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
             label_key_status.configure(text="(未入力可)", font=DESC_FONT, text_color="gray")
-        # --- ここから追加: APIキー未入力時はUC形式のみ許可 ---
-        if not key:
+        # --- ここから: APIキーが有効な場合のみバリデーション緩和 ---
+        if not is_valid_api_key(key):
+            # UC形式IDのみ許可
             if not (channel and channel_valid and channel_valid.startswith("UC")):
                 label_channel_status.configure(text="✗ UC形式IDのみ可", font=DESC_FONT, text_color="red")
                 ok = False
             else:
                 label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
+            # APIキーが有効な場合は緩和
             if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
                 label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
             else:
