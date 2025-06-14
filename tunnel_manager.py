@@ -62,7 +62,7 @@ def tunnel_monitor_loop(
     import time
     import select
     import re
-    from utils import get_ngrok_public_url, set_webhook_callback_url_temporary, get_settings_env_abspath
+    from utils.utils import get_ngrok_public_url, set_webhook_callback_url_temporary, get_settings_env_abspath
     if env_path is None:
         env_path = get_settings_env_abspath()
     while True:

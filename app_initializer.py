@@ -2,7 +2,7 @@ from tunnel_manager import start_tunnel_and_monitor
 from service_monitor import start_youtube_monitor, start_niconico_monitor
 from eventsub import setup_broadcaster_id, get_valid_app_access_token, create_eventsub_subscription, cleanup_eventsub_subscriptions
 from logging_config import configure_logging
-from utils import rotate_secret_if_needed
+from utils.utils import rotate_secret_if_needed
 import os
 
 def initialize_app(app, tunnel_logger):

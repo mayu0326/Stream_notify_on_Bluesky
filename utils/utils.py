@@ -5,11 +5,9 @@ Stream notify on Bluesky
 このモジュールはTwitch/YouTube/Niconicoの放送と動画投稿の通知をBlueskyに送信するBotの一部です。
 """
 
-from tkinter import filedialog
 import requests
 from version_info import __version__
 import re
-import datetime as dt_module  # datetimeクラスとの衝突を避けるためのエイリアス
 from datetime import datetime, timezone  # 必要なクラスのみインポート
 import os
 import secrets
