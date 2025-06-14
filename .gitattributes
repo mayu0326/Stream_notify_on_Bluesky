@@ -142,6 +142,9 @@ config.yml export-ignore
 # その他の除外
 *.bak export-ignore
 wiki/* export-ignore
+*.env.bak export-ignore
+*.env export-ignore
+*.env.example.bak export-ignore
 
 # その他のドキュメント
 document/FileTree.md export-ignore
