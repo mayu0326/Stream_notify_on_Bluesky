@@ -3,6 +3,13 @@
 Twitch EventSubウェブフックやYouTube/Niconicoの監視機能を利用し、Cloudflare Tunnelやngrok/localtunnel/customトンネルを使ってローカル環境でもWebhookを受信できます。\
 GUI（Tkinter）による設定・管理にも対応し、各種設定の自動反映や保存完了メッセージ表示など、ユーザビリティも強化されています。
 
+【主なファイル構成のポイント】
+- settings.env.example（テンプレート）…配布ファイルに含まれる。\
+- settings.env（本番用設定ファイル）…配布ファイルには含まれず、初回セットアップまたはウィザードで自動生成。\
+  - 起動時にutils/env_migrator.pyによる自動マイグレーション（不足項目追加・不要項目コメントアウト等）が行われる。
+- latest_videos.json … 新着動画・配信の管理用キャッシュファイル。
+- static/ … favicon.ico等の静的ファイル格納ディレクトリ。
+
 ## 主な機能
 *   **Twitch/YouTube/ニコニコ連携:** 各サービスの配信開始・新着動画投稿を自動検知し、Blueskyへ通知（配信終了通知はニコニコ生放送のみ非対応）。
 *   **Bluesky通知:** サービスごとにカスタマイズ可能なテンプレート・画像でBlueskyに投稿。テンプレート・画像・Webhook・APIキー等は各サービスごとに個別管理可能。
@@ -48,6 +55,8 @@ GUI（Tkinter）による設定・管理にも対応し、各種設定の自動�
     * Discord Webhook URL
     * ログレベル等
     * トンネルコマンド・WebhookコールバックURL（恒久用/一時用）
+    - ※settings.envは配布ファイルに含まれません。初回セットアップ時やGUIウィザードで自動生成されます。
+    - ※起動時に自動マイグレーション（utils/env_migrator.py）が実行され、常に最新仕様に保たれます。
 4. 必要に応じてGUI（`python gui/app_gui.py`）で設定・管理。
     * GUIではテンプレート・画像・Webhook・APIキー等を直感的に編集可能。
     * 設定保存時は完了メッセージが表示され、タブ切替時に最新設定が自動反映されます。

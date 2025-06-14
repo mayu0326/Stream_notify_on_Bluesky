@@ -23,6 +23,7 @@
 | version_info.py          | ユーティリティ| __version__を一元的に提供                                                     | main.py、各コア・GUI、テスト             |
 | webhook_routes.py        | コア         | Webhookエンドポイントのルーティング・受信処理                                   | main.py                                   |
 | youtube_monitor.py       | コア         | YouTubeLive・動画の監視・通知。                                                | main.py                                   |
+| latest_videos.json       | データ       | 新着動画・配信の管理用JSONファイル。                                           | youtube_monitor.py、niconico_monitor.py   |
 
 ---
 
@@ -97,6 +98,7 @@
 | pyproject.toml                    | 設定      | Pythonプロジェクト設定                                       | poetry/pip等                             |
 | setup.bat / start.bat /           | 設定      | Windows用セットアップ・起動バッチ                            | -                                        |
 | Cloudflared\install_tunnel.bat    | 設定      | Windows用トンネルセットアップバッチ                            | -                                        |
+| static/                       | 静的      | favicon等の静的ファイル格納ディレクトリ                                   | Webサーバ・Flask                          |
 
 ---
 
