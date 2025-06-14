@@ -429,3 +429,27 @@ def cleanup_eventsub_subscriptions(webhook_callback_url, logger_to_use=None):
 
     current_logger.info(
         f"EventSubサブスクリプションのクリーンアップ完了。{deleted_count}件のサブスクリプションを削除しました。")
+
+def get_channel_information(broadcaster_user_id, logger_to_use=None):
+    """
+    Twitch API Get Channel Informationエンドポイントを使い、
+    指定ユーザーIDの配信タイトル・カテゴリ名（game_name）等を取得する
+    """
+    current_logger = logger_to_use if logger_to_use else logger
+    url = "https://api.twitch.tv/helix/channels"
+    headers = {
+        "Client-ID": TWITCH_CLIENT_ID,
+        "Authorization": f"Bearer {get_valid_app_access_token(logger_to_use=current_logger)}",
+    }
+    params = {"broadcaster_id": broadcaster_user_id}
+    try:
+        response = requests.get(url, headers=headers, params=params, timeout=10)
+        response.raise_for_status()
+        data = response.json().get("data", [])
+        if not data or not isinstance(data, list):
+            current_logger.warning(f"Twitch API Get Channel Information: データが空です (broadcaster_id: {broadcaster_user_id})")
+            return {}
+        return data[0]
+    except Exception as e:
+        current_logger.error(f"Twitch API Get Channel Information取得失敗: {e}")
+        return {}

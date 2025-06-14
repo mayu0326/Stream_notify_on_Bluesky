@@ -73,10 +73,12 @@ class NiconicoNoticeFrame(ctk.CTkFrame):
         ctk.CTkLabel(self, text="放送開始時テンプレート:", font=DEFAULT_FONT).grid(row=2, column=0, sticky="w")
         self.lbl_online_tpl = ctk.CTkLabel(self, text=os.path.basename(self.tpl_online.get()), font=DEFAULT_FONT)
         self.lbl_online_tpl.grid(row=2, column=1, sticky="w")
+        ctk.CTkButton(self, text="テンプレート編集", command=self.open_template_editor_online, font=DEFAULT_FONT, width=140).grid(row=3, column=0, sticky="w", pady=(0, 10))
         ctk.CTkButton(self, text="テンプレート変更...", command=self.change_template_file_online, font=DEFAULT_FONT, width=140).grid(row=3, column=1, sticky="w", pady=(0, 10))
         ctk.CTkLabel(self, text="動画投稿時テンプレート:", font=DEFAULT_FONT).grid(row=4, column=0, sticky="w")
         self.lbl_newvideo_tpl = ctk.CTkLabel(self, text=os.path.basename(self.tpl_newvideo.get()), font=DEFAULT_FONT)
         self.lbl_newvideo_tpl.grid(row=4, column=1, sticky="w")
+        ctk.CTkButton(self, text="テンプレート編集", command=self.open_template_editor_newvideo, font=DEFAULT_FONT, width=140).grid(row=5, column=0, sticky="w", pady=(0, 10))
         ctk.CTkButton(self, text="テンプレート変更...", command=self.change_template_file_newvideo, font=DEFAULT_FONT, width=140).grid(row=5, column=1, sticky="w", pady=(0, 10))
         ctk.CTkLabel(self, text="画像ファイル:", font=DEFAULT_FONT).grid(row=6, column=0, sticky="w")
         self.img_preview = ctk.CTkLabel(self, width=200, height=112.5, text="", fg_color="white")
@@ -198,3 +200,33 @@ class NiconicoNoticeFrame(ctk.CTkFrame):
         from gui.app_gui import show_ctk_info
         show_ctk_info(self, '保存完了', 'ニコニコ通知設定を保存しました。')
         self.status_label.configure(text="保存しました")
+
+    def open_template_editor_online(self):
+        from .template_editor_dialog import TemplateEditorDialog
+        path = self.tpl_online.get()
+        initial_text = ""
+        if os.path.isfile(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    initial_text = f.read()
+            except Exception:
+                pass
+        def on_save(new_path):
+            if new_path:
+                self.tpl_online.set(new_path)
+        TemplateEditorDialog(self, template_type="niconico_online", initial_text=initial_text, on_save=on_save, initial_path=path)
+
+    def open_template_editor_newvideo(self):
+        from .template_editor_dialog import TemplateEditorDialog
+        path = self.tpl_newvideo.get()
+        initial_text = ""
+        if os.path.isfile(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    initial_text = f.read()
+            except Exception:
+                pass
+        def on_save(new_path):
+            if new_path:
+                self.tpl_newvideo.set(new_path)
+        TemplateEditorDialog(self, template_type="niconico_new_video", initial_text=initial_text, on_save=on_save, initial_path=path)

@@ -76,10 +76,12 @@ class TwitchNoticeFrame(ctk.CTkFrame):
         ctk.CTkLabel(self, text="放送開始時投稿テンプレート:", font=DEFAULT_FONT).grid(row=2, column=0, sticky="w")
         self.lbl_online_tpl = ctk.CTkLabel(self, text=os.path.basename(self.tpl_online.get()), font=DEFAULT_FONT)
         self.lbl_online_tpl.grid(row=2, column=1, sticky="w")
+        ctk.CTkButton(self, text="テンプレート編集", command=self.open_template_editor_online, font=DEFAULT_FONT, width=140).grid(row=3, column=0, sticky="w", pady=(0, 10))
         ctk.CTkButton(self, text="テンプレート変更...", command=self.change_template_file_online, font=DEFAULT_FONT, width=140).grid(row=3, column=1, sticky="w", pady=(0, 10))
         ctk.CTkLabel(self, text="放送終了時投稿テンプレート:", font=DEFAULT_FONT).grid(row=4, column=0, sticky="w")
         self.lbl_offline_tpl = ctk.CTkLabel(self, text=os.path.basename(self.tpl_offline.get()), font=DEFAULT_FONT)
         self.lbl_offline_tpl.grid(row=4, column=1, sticky="w")
+        ctk.CTkButton(self, text="テンプレート編集", command=self.open_template_editor_offline, font=DEFAULT_FONT, width=140).grid(row=5, column=0, sticky="w", pady=(0, 10))
         ctk.CTkButton(self, text="テンプレート変更...", command=self.change_template_file_offline, font=DEFAULT_FONT, width=140).grid(row=5, column=1, sticky="w", pady=(0, 10))
         ctk.CTkLabel(self, text="画像ファイル:", font=DEFAULT_FONT).grid(row=6, column=0, columnspan=2, sticky="w")
         self.img_preview = ctk.CTkLabel(self, width=200, height=112.5, text="", fg_color="white", image=None)
@@ -204,3 +206,33 @@ class TwitchNoticeFrame(ctk.CTkFrame):
         from gui.app_gui import show_ctk_info
         show_ctk_info(self, '保存完了', 'Twitch通知設定を保存しました。')
         self.status_label.configure(text="保存しました")
+
+    def open_template_editor_online(self):
+        from .template_editor_dialog import TemplateEditorDialog
+        path = self.tpl_online.get()
+        initial_text = ""
+        if os.path.isfile(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    initial_text = f.read()
+            except Exception:
+                pass
+        def on_save(new_path):
+            if new_path:
+                self.tpl_online.set(new_path)
+        TemplateEditorDialog(self, template_type="twitch_online", initial_text=initial_text, on_save=on_save, initial_path=path)
+
+    def open_template_editor_offline(self):
+        from .template_editor_dialog import TemplateEditorDialog
+        path = self.tpl_offline.get()
+        initial_text = ""
+        if os.path.isfile(path):
+            try:
+                with open(path, 'r', encoding='utf-8') as f:
+                    initial_text = f.read()
+            except Exception:
+                pass
+        def on_save(new_path):
+            if new_path:
+                self.tpl_offline.set(new_path)
+        TemplateEditorDialog(self, template_type="twitch_offline", initial_text=initial_text, on_save=on_save, initial_path=path)

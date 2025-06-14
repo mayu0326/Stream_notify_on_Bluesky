@@ -31,7 +31,7 @@ import signal
 import sys
 import os
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder="static")
 app.register_blueprint(webhook_bp)
 app.register_error_handler(404, handle_404)
 
@@ -75,6 +75,8 @@ if __name__ == "__main__":
                 time.sleep(1)
         except KeyboardInterrupt:
             signal_handler(signal.SIGINT, None)
+        # CUI終了時にトンネルも停止
+        stop_tunnel_and_monitor()
         cleanup_application()
     else:
         sys.exit(1)

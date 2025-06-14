@@ -5,3 +5,4 @@
 
 配信者: {{ broadcaster_user_name }} ({{ broadcaster_user_login }})
 チャンネルURL: {{ channel_url }}
+終了時刻: {{ ended_at | datetimeformat }}
