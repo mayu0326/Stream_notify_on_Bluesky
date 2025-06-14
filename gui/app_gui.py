@@ -7,6 +7,9 @@ Stream notify on Bluesky
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from dotenv import load_dotenv
+from utils.env_migrator import migrate_env
+
 import customtkinter as ctk
 from gui.account_settings_frame import AccountSettingsFrame
 from gui.tunnel_connection import TunnelConnection
@@ -21,7 +24,6 @@ from gui.niconico_notice_frame import NiconicoNoticeFrame
 from gui.twitch_notice_frame import TwitchNoticeFrame
 from gui.youtube_notice_frame import YouTubeNoticeFrame
 import configparser
-from dotenv import load_dotenv
 
 from version_info import __version__
 
@@ -284,4 +286,5 @@ if __name__ == "__main__":
         SetupWizard(master=root, on_finish=on_finish)
         root.mainloop()
     else:
+        migrate_env()
         MainWindow().mainloop()
