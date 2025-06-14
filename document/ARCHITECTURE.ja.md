@@ -25,6 +25,13 @@
         - 進捗・ステータス表示やボタン配置は中央・拡張性重視で整理。
 - **主要技術:** Flask, Waitress, Tkinter（GUI連携）
 
+#### utils/utils.py
+- **役割:** 共通ユーティリティ（パス変換・日付整形・ファイル操作・リトライ・シークレット生成・Jinja2フィルタ等）。
+- **機能:**
+    - Jinja2日付フィルタ、.envファイル更新（コメント保持）、リトライデコレータ、シークレット生成、.env読込、シークレットローテーション、URL検証。
+    - **utils/ディレクトリ配下に配置され、env_migrator.py等の補助スクリプトも含む。**
+- **主要技術:** secrets, datetime, pytz, tzlocal
+
 #### utils/env_migrator.py
 - **役割:** settings.envの自動マイグレーション（不足項目追加・不要項目コメントアウト・バックアップ作成）。
 - **機能:**
@@ -70,14 +77,6 @@
     - 状態表示は色分け（緑=稼働/赤=停止）で統一。
 - **主要技術:** subprocess, shlex, logging, 環境変数によるサービス切替
 
-#### utils.py
-- **役割:** 共通ユーティリティ。
-- **機能:**
-    - Jinja2日付フィルタ、.envファイル更新（コメント保持）、リトライデコレータ、シークレット生成、\
-    .env読込、シークレットローテーション、URL検証。
-    - **utils/ディレクトリ配下に配置され、env_migrator.py等の補助スクリプトも含む。**
-- **主要技術:** secrets, datetime, pytz, tzlocal
-
 #### cleanup.py
 - **役割:** アプリケーション終了時のクリーンアップ処理・リソース解放。
 - **機能:**
@@ -117,7 +116,8 @@
 - **役割:** settings.envは本番用設定ファイル（※配布ファイルには含まれません。初回セットアップまたはウィザードで自動生成）。settings.env.exampleはテンプレート。
 - **主要設定:**
     - Twitch: TWITCH_CLIENT_ID, TWITCH_CLIENT_SECRET, TWITCH_BROADCASTER_ID
-    - Bluesky: BLUESKY_USERNAME, BLUESKY_APP_PASSWORD, BLUESKY_IMAGE_PATH, BLUESKY_TEMPLATE_PATH, BLUESKY_OFFLINE_TEMPLATE_PATH, BLUESKY_YT_ONLINE_TEMPLATE_PATH, BLUESKY_YT_OFFLINE_TEMPLATE_PATH, BLUESKY_NICO_ONLINE_TEMPLATE_PATH, BLUESKY_NICO_NEW_VIDEO_TEMPLATE_PATH など
+    - Bluesky: BLUESKY_USERNAME, BLUESKY_APP_PASSWORD, BLUESKY_IMAGE_PATH, BLUESKY_YT_ONLINE_TEMPLATE_PATH, BLUESKY_YT_OFFLINE_TEMPLATE_PATH,\
+    BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH, BLUESKY_NICO_ONLINE_TEMPLATE_PATH, BLUESKY_NICO_NEW_VIDEO_TEMPLATE_PATH など
     - YouTube: YOUTUBE_API_KEY, YOUTUBE_CHANNEL_ID, YOUTUBE_POLL_INTERVAL, YOUTUBE_POLL_INTERVAL_ONLINE
     - ニコニコ: NICONICO_USER_ID, NICONICO_LIVE_POLL_INTERVAL
     - Webhook: WEBHOOK_SECRET, SECRET_LAST_ROTATED, WEBHOOK_CALLBACK_URL
@@ -137,19 +137,15 @@
 - **機能:**
     - Webサーバー（Flask等）で利用される静的リソースを管理。
 
-#### logging_config.py
-- **役割:** ロギング設定。
+#### logs/
+- **役割:** アプリケーションの各種ログファイル格納ディレクトリ。
 - **機能:**
-    - AuditLogger（logs/audit.log）、AppLogger（logs/app.log, logs/error.log, コンソール）。
-    - TimedRotatingFileHandlerでローテーション・保持。
-    - Discordエラー通知（任意）。
-    - Flaskロガー統合。
-- **主要ライブラリ:** logging, discord_logging.handler
+    - app.log, error.log, audit.log, post_history.csvなど、各種ログ・履歴を管理。
 
-#### Cloudflared/config.yml.example
-- **役割:** cloudflaredの設定例。
+#### wiki/
+- **役割:** 各種Markdownドキュメント（FAQ, 設定説明, 用語集, テンプレ引数, GUIマニュアル等）を格納。
 - **機能:**
-    - トンネルUUID、認証情報、イングレスルール、noTLSVerify。
+    - プロジェクトのドキュメント・ナレッジベースとして活用。
 
 ### 3. サポートファイル・ディレクトリ
 
@@ -159,10 +155,10 @@
 - templates/: Bluesky投稿用Jinja2テンプレート（Twitch/YouTube/ニコニコ等サービスごと）
 - images/: 投稿用画像（noimage.png等）
 - logs/: ログファイル（app.log, error.log, audit.log, post_history.csv）
-- **utils/: 共通ユーティリティ・設定マイグレーションスクリプト等を格納するディレクトリ。**
-- **static/: favicon.ico等の静的ファイルを格納するディレクトリ。**
-- **latest_videos.json: 新着動画・配信の管理用JSONファイル。**
-- **settings.env: 本番用設定ファイル（自動マイグレーション対応、※配布ファイルには含まれません。初回セットアップまたはウィザードで自動生成されます）。**
+- utils/: 共通ユーティリティ・設定マイグレーションスクリプト等を格納するディレクトリ。
+- static/: favicon.ico等の静的ファイルを格納するディレクトリ。
+- latest_videos.json: 新着動画・配信の管理用JSONファイル。
+- settings.env: 本番用設定ファイル（自動マイグレーション対応、※配布ファイルには含まれません。初回セットアップまたはウィザードで自動生成されます）。
 
 ### 4. 開発・CI/CDセットアップ
 
@@ -185,6 +181,8 @@
 削除・リネーム・空ディレクトリ化は動作不良の原因となるため厳禁です。
 - テンプレート・画像パスは templates/・images/ 以降の相対パスで管理・指定してください。
 - 投稿履歴（logs/post_history.csv）はGUI・CLI共通で参照・管理されます。
+- `settings.env`や`settings.env.bak`などの機密ファイル・バックアップファイルは**リポジトリには含めないでください**。
+- **YouTubeのAPIキー未設定時は「UC～」で始まるチャンネルIDのみ有効です。@ハンドルやuser/形式、URL貼付け等はAPIキーが設定されている場合のみ自動変換されます。**
 
 ### 全体概要
 

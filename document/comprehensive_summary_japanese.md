@@ -32,6 +32,28 @@ GUI（Tkinter）による設定・管理にも対応し、各種設定の自動�
 *   **サブスクリプション管理:** 不要なTwitch EventSubサブスクリプションの自動クリーンアップ。
 *   **セキュリティ:** Webhook署名検証によるリプレイ攻撃対策、WEBHOOK_SECRETの自動ローテーション。
 
+*   **YouTubeチャンネルID仕様:**
+    * **YouTube APIキー未設定時**は、UCから始まるチャンネルID（例: UCxxxx...）のみ**通知対象として許可**されます。
+    * APIキーを設定した場合は、**カスタムIDや@ハンドル形式**も利用可能です。
+    * GUI・CLIともに、**APIキー未入力時はUC形式ID以外**は保存・起動できません。
+
+*   **機密ファイル管理:**
+    * `settings.env`や`settings.env.bak`等の**機密ファイル**は、`.gitignore`で必ず除外し、**Git履歴にも残さない運用**としてください。
+    * `settings.env.bak`等を誤ってコミットした場合は、`git filter-repo`等で**履歴から完全削除してください**。
+    * `settings.env.example`のみ**配布・共有可能**です。
+
+*   **テンプレート・画像パス命名規則:**
+    * パスは必ず`templates/`・`images/`以降の相対パスで指定してください。**絶対パスやプロジェクトルートから**のパスは非推奨です。
+    * Bluesky通知テンプレートのパス（例: `BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH`）は、サービスごとに個別に設定できます。
+
+*   **settings.env自動マイグレーション:**
+    * 起動時に`utils/env_migrator.py`が自動で**不足項目の追加・不要項目のコメントアウト**等を行い、常に最新仕様に保ちます。
+    * 手動編集時も、次回起動時に自動で整合性が取られます。
+
+*   **.gitignore運用:**
+    * 機密ファイル（`settings.env`,`settings.env.bak`,`logs/`等）は必ず`.gitignore`で除外してください。
+    * 配布・共有時は`settings.env.example`のみ含めてください。
+
 ## 使用されている主要なテクノロジー
 *   Python（コア言語）
 *   Flask（Webhook用Webフレームワーク）
@@ -63,7 +85,12 @@ GUI（Tkinter）による設定・管理にも対応し、各種設定の自動�
 5. ボットは`python main.py`で起動。通知レベルやテンプレート切り替え等はsettings.envまたはGUIから管理。
 
 ### 注意事項
-- templates/配下の各サブディレクトリ（niconico, twitch, youtube等）には __init__.txt（システム管理用）が必須です。\
+- `templates/`配下の各サブディレクトリ（niconico, twitch, youtube等）には `__init__.txt`（システム管理用）が必須です。\
 削除・リネーム・空ディレクトリ化は動作不良の原因となるため厳禁です。
-- テンプレート・画像パスは templates/・images/ 以降の相対パスで管理・指定してください。
-- 投稿履歴（logs/post_history.csv）はGUI・CLI共通で参照・管理されます。
+- テンプレート・画像パスは `templates/`,`images/`以降の相対パスで管理・指定してください。
+- 投稿履歴（`logs/post_history.csv`）はGUI・CLI共通で参照・管理されます。
+- YouTubeチャンネルIDは、APIキー未設定時はUC形式ID（UCxxxx...）のみ許可されます。APIキー設定時はカスタムIDや@ハンドルも利用可能です。
+- `settings.env`や`settings.env.bak`等の**機密ファイル**は、`.gitignore`で除外し、**Git履歴にも残さないよう厳重に管理**してください。
+- `settings.env`は**配布・共有禁止**、`settings.env.example`のみ配布可です。
+- テンプレート・画像パスは必ず`templates/`,`images/`以降の相対パスで指定してください。
+- `settings.env`は起動時に自動マイグレーションされ、常に最新仕様に保たれます。
