@@ -19,10 +19,14 @@
 | service_monitor.py       | コア         | サービス状態監視・ヘルスチェック                                               | main.py                                   |
 | tunnel.py                | コア         | トンネル通信アプリ（Cloudflare/ngrok/localtunnel/custom）の起動・管理。        | main.py、GUI（tunnel_connection等）       |
 | tunnel_manager.py        | コア         | トンネル管理の補助・状態管理                                                  | main.py、tunnel.py                       |
-| utils.py                 | ユーティリティ| 各種共通関数（パス変換・日付整形・ファイル操作など）。                         | 各コア・GUI・テスト                       |
+| utils/utils.py                 | ユーティリティ| 各種共通関数（パス変換・日付整形・ファイル操作など）。                         | 各コア・GUI・テスト                       |
+| utils/env_migrator.py          | ユーティリティ| 設定ファイルの自動マイグレーション・変換補助                                   | main.py、開発時                          |
+| static/favicon.ico             | 静的ファイル | Favicon（Web UI等で利用）                                                    | -                                        |
+| logs/                          | ログ        | アプリケーションの各種ログファイル格納ディレクトリ                             | main.py、各コア・GUI                      |
 | version_info.py          | ユーティリティ| __version__を一元的に提供                                                     | main.py、各コア・GUI、テスト             |
 | webhook_routes.py        | コア         | Webhookエンドポイントのルーティング・受信処理                                   | main.py                                   |
 | youtube_monitor.py       | コア         | YouTubeLive・動画の監視・通知。                                                | main.py                                   |
+| latest_videos.json       | データ       | 新着動画・配信の管理用JSONファイル。                                           | youtube_monitor.py、niconico_monitor.py   |
 
 ---
 
@@ -97,6 +101,10 @@
 | pyproject.toml                    | 設定      | Pythonプロジェクト設定                                       | poetry/pip等                             |
 | setup.bat / start.bat /           | 設定      | Windows用セットアップ・起動バッチ                            | -                                        |
 | Cloudflared\install_tunnel.bat    | 設定      | Windows用トンネルセットアップバッチ                            | -                                        |
+| static/                       | 静的      | favicon等の静的ファイル格納ディレクトリ                                   | Webサーバ・Flask                          |
+| wiki/                          | ドキュメント| 各種Markdownドキュメント（FAQ, 設定説明, 用語集, テンプレ引数, GUIマニュアル等） | -                                        |
+
+※ `settings.env`や`settings.env.bak`などの機密ファイル・バックアップファイルは**リポジトリには含めないでください**。
 
 ---
 

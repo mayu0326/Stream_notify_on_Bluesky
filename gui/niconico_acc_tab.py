@@ -72,18 +72,25 @@ def create_niconico_tab(parent):
     entry_id.bind("<FocusOut>", on_id_entry_change)
     entry_id.bind("<Return>", on_id_entry_change)
     # ポーリング間隔の入力欄
-    label_poll = ctk.CTkLabel(niconico_tab, text="ポーリング間隔（秒）:", font=DEFAULT_FONT)
+    label_poll = ctk.CTkLabel(niconico_tab, text="ポーリング間隔（分, 最小5分, 推奨10分）:", font=DEFAULT_FONT)
     label_poll.pack(anchor="w", padx=20, pady=(10, 0))
     entry_poll = ctk.CTkEntry(niconico_tab, font=DEFAULT_FONT)
     entry_poll.insert(0, nico_poll)
     entry_poll.pack(fill="x", padx=20, pady=(0, 10))
-
+    def poll_validate_char(new_value):
+        return new_value.isdigit() and len(new_value) <= 3 or new_value == ""
+    entry_poll.configure(validate="key", validatecommand=(entry_poll.register(poll_validate_char), '%P'))
     def save_niconico_settings():
         # 入力されたユーザーIDとポーリング間隔を.envファイルに保存し、
         # RSSフィードの取得結果を表示する。
         user_id_raw = entry_id.get().strip()
         user_id = extract_nico_user_id(user_id_raw)
         poll = entry_poll.get().strip()
+        # バリデーション: 最小5分
+        if not (poll.isdigit() and int(poll) >= 5):
+            from gui.app_gui import show_ctk_error
+            show_ctk_error(niconico_tab, "エラー", "ポーリング間隔は5分以上で入力してください。")
+            return
         env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
         lines = []
         found_id = found_poll = False

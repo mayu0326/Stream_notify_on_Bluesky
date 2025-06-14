@@ -33,6 +33,7 @@ import customtkinter as ctk
 from dotenv import load_dotenv
 import tkinter as tk
 import re
+import string
 
 DEFAULT_FONT = ("Yu Gothic UI", 15, "normal")
 TITLE_FONT = ("Yu Gothic UI", 17, "normal")
@@ -46,7 +47,6 @@ def create_youtube_tab(parent):
     yt_channel = os.getenv('YOUTUBE_CHANNEL_ID', '')
     yt_poll = os.getenv('YOUTUBE_POLL_INTERVAL', '60')
     yt_poll_online = os.getenv('YOUTUBE_POLL_INTERVAL_ONLINE', '30')
-    yt_poll_offline = os.getenv('YOUTUBE_POLL_INTERVAL_OFFLINE', '180')
     # タイトルラベル
     label_title = ctk.CTkLabel(youtube_tab, text="YouTube APIキー/チャンネル設定", font=TITLE_FONT)
     label_title.pack(pady=(18, 6))
@@ -82,13 +82,13 @@ def create_youtube_tab(parent):
     desc_color = "white" if ctk.get_appearance_mode() == "Dark" else "black"
     label_channel_desc = ctk.CTkLabel(youtube_tab, text="例: UCxxxx... /channel/UCxxxx... /user/xxxx /c/xxxx @handle も可 (URL貼付もOK)", font=("Meiryo", 12), text_color=desc_color)
     label_channel_desc.pack(anchor="w", padx=28, pady=(0, 8))
-    # --- ポーリング間隔エントリ（3種）を1つのFrameで縦並びに ---
+    # --- ポーリング間隔エントリ（分単位・最小値明示）を1つのFrameで縦並びに ---
     poll_group = ctk.CTkFrame(youtube_tab, fg_color="transparent")
     poll_group.pack(fill="x", padx=20, pady=(10, 0))
     # 通常
     poll_row = ctk.CTkFrame(poll_group, fg_color="transparent")
     poll_row.pack(fill="x", pady=(0, 2))
-    ctk.CTkLabel(poll_row, text="ポーリング間隔（秒/通常）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
+    ctk.CTkLabel(poll_row, text="ポーリング間隔（分/通常, 最小30分, 推奨60分）:", font=DEFAULT_FONT, width=260, anchor="w").pack(side="left")
     entry_poll = ctk.CTkEntry(poll_row, font=DEFAULT_FONT, width=100)
     entry_poll.insert(0, yt_poll)
     entry_poll.pack(side="left", padx=(8,0))
@@ -97,87 +97,83 @@ def create_youtube_tab(parent):
     # 放送中
     poll_online_row = ctk.CTkFrame(poll_group, fg_color="transparent")
     poll_online_row.pack(fill="x", pady=(0, 2))
-    ctk.CTkLabel(poll_online_row, text="ポーリング間隔（秒/放送中）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
+    ctk.CTkLabel(poll_online_row, text="ポーリング間隔（分/放送中, 最小45分, 推奨60分）:", font=DEFAULT_FONT, width=260, anchor="w").pack(side="left")
     entry_poll_online = ctk.CTkEntry(poll_online_row, font=DEFAULT_FONT, width=100)
     entry_poll_online.insert(0, yt_poll_online)
     entry_poll_online.pack(side="left", padx=(8,0))
-    # 放送外
-    poll_offline_row = ctk.CTkFrame(poll_group, fg_color="transparent")
-    poll_offline_row.pack(fill="x", pady=(0, 6))
-    ctk.CTkLabel(poll_offline_row, text="ポーリング間隔（秒/放送外）:", font=DEFAULT_FONT, width=180, anchor="w").pack(side="left")
-    entry_poll_offline = ctk.CTkEntry(poll_offline_row, font=DEFAULT_FONT, width=100)
-    entry_poll_offline.insert(0, yt_poll_offline)
-    entry_poll_offline.pack(side="left", padx=(8,0))
-    # チャンネルIDの抽出・バリデーション
+    # --- チャンネルID抽出・バリデーション関数を明示的に定義 ---
     def extract_channel_id_or_url(text):
-        """
-        入力がチャンネルID（UC...）か、URL（/channel/UC...、/user/...、/c/...、/hoge、/@handle）かを判定し、
-        チャンネルIDまたは有効なURL/ハンドルを返す。無効ならNone。
-        """
-        # 公式ID
+        import re
         if re.fullmatch(r'^UC[a-zA-Z0-9_-]{22}$', text):
             return text
         url = text.strip()
-        # プロトコル・www有無を除去
         url = re.sub(r'^https?://(www\.)?', '', url)
-        # @ハンドル（例: youtube.com/@example）
         m = re.search(r'^youtube\.com/(@[\w\-]+)', url)
         if m:
             return m.group(1)
-        # /channel/UC... パターン
         m = re.search(r'^youtube\.com/channel/(UC[a-zA-Z0-9_-]{22})', url)
         if m:
             return m.group(1)
-        # /user/...
         m = re.search(r'^youtube\.com/(user/[\w\-%]+)', url)
         if m:
             return m.group(1)
-        # /c/...
         m = re.search(r'^youtube\.com/(c/[\w\-%]+)', url)
         if m:
             return m.group(1)
-        # /hoge（予約語除外）
         m = re.search(r'^youtube\.com/([\w\-%]+)', url)
         reserved = [
             'watch', 'feed', 'playlist', 'user', 'c', 'channel', 'paid_memberships'
         ]
         if m and m.group(1) not in reserved:
             return m.group(1)
-        # 直接@handle入力も許可
         if re.fullmatch(r'@([\w\-]+)', text):
             return text
         return None
-
+    def is_valid_api_key(key):
+        # Google公式のAPIキー形式: 'AIza'で始まり39～50文字、英数字・アンダースコア・ハイフン
+        return re.fullmatch(r'^AIza[0-9A-Za-z_\-]{35,45}$', key) is not None
+    # --- バリデーション修正 ---
     def validate_youtube():
         key = entry_key.get().strip()
         channel = entry_channel.get().strip()
         poll = entry_poll.get().strip()
         poll_online = entry_poll_online.get().strip()
-        poll_offline = entry_poll_offline.get().strip()
         ok = True
         channel_valid = extract_channel_id_or_url(channel)
         if channel and channel_valid and channel != channel_valid:
             entry_channel.delete(0, "end")
             entry_channel.insert(0, channel_valid)
             channel = channel_valid
-        if key:
+        # APIキーは空欄または有効な形式のみ許可
+        if not key:
+            label_key_status.configure(text="(未入力可)", font=DESC_FONT, text_color="gray")
+        elif is_valid_api_key(key):
             label_key_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
-            label_key_status.configure(text="✗", font=DESC_FONT, text_color="red")
+            label_key_status.configure(text="✗ 無効なAPIキー形式", font=DESC_FONT, text_color="red")
             ok = False
-        if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
-            label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
-        else:
-            label_channel_status.configure(text="✗", font=DESC_FONT, text_color="red")
-            ok = False
-        # ポーリング間隔のバリデーション
-        for v, entry in zip([poll, poll_online, poll_offline], [entry_poll, entry_poll_online, entry_poll_offline]):
-            if not (v.isdigit() and 1 <= len(v) <= 3):
+        # チャンネルIDバリデーション
+        if not key:
+            # 空欄時はUC形式のみ許可
+            if not (channel and channel_valid and channel_valid.startswith("UC")):
+                label_channel_status.configure(text="✗ UC形式IDのみ可", font=DESC_FONT, text_color="red")
+                ok = False
+            else:
+                label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
+        elif is_valid_api_key(key):
+            # APIキーが有効な場合は緩和
+            if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
+                label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
+            else:
+                label_channel_status.configure(text="✗", font=DESC_FONT, text_color="red")
+                ok = False
+        # ポーリング間隔のバリデーション（分単位・最小値）
+        for v, entry, minval in zip([poll, poll_online], [entry_poll, entry_poll_online], [30, 45]):
+            if not (v.isdigit() and int(v) >= minval):
                 entry.configure(border_color="red")
                 ok = False
             else:
-                # OK時はborder_colorを変更しない（configureを呼ばない）
-                pass
+                entry.configure(border_color="green")
         label_poll_status.configure(text="" if ok else "入力エラー", font=DESC_FONT, text_color="green" if ok else "red")
         return ok
     # ポーリング間隔は数字のみ・最大3桁に制限
@@ -185,12 +181,10 @@ def create_youtube_tab(parent):
         return new_value.isdigit() and len(new_value) <= 3 or new_value == ""
     entry_poll.configure(validate="key", validatecommand=(entry_poll.register(poll_validate_char), '%P'))
     entry_poll_online.configure(validate="key", validatecommand=(entry_poll_online.register(poll_validate_char), '%P'))
-    entry_poll_offline.configure(validate="key", validatecommand=(entry_poll_offline.register(poll_validate_char), '%P'))
     entry_key.bind("<KeyRelease>", lambda e: validate_youtube())
     entry_channel.bind("<KeyRelease>", lambda e: validate_youtube())
     entry_poll.bind("<KeyRelease>", lambda e: validate_youtube())
     entry_poll_online.bind("<KeyRelease>", lambda e: validate_youtube())
-    entry_poll_offline.bind("<KeyRelease>", lambda e: validate_youtube())
     validate_youtube()
     label_connect_status = ctk.CTkLabel(youtube_tab, text="", font=DEFAULT_FONT)
     def test_youtube_connect():
@@ -259,14 +253,13 @@ def create_youtube_tab(parent):
         channel = entry_channel.get().strip()
         poll = entry_poll.get().strip()
         poll_online = entry_poll_online.get().strip()
-        poll_offline = entry_poll_offline.get().strip()
         if not validate_youtube():
             from gui.app_gui import show_ctk_error
             show_ctk_error(youtube_tab, "エラー", "全ての項目を正しく入力してください。")
             return
         env_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
         lines = []
-        found_key = found_channel = found_poll = found_poll_online = found_poll_offline = False
+        found_key = found_channel = found_poll = found_poll_online = False
         if os.path.exists(env_path):
             with open(env_path, 'r', encoding='utf-8') as f:
                 lines = f.readlines()
@@ -284,9 +277,6 @@ def create_youtube_tab(parent):
             elif line.startswith('YOUTUBE_POLL_INTERVAL_ONLINE='):
                 new_lines.append(f'YOUTUBE_POLL_INTERVAL_ONLINE={poll_online}\n')
                 found_poll_online = True
-            elif line.startswith('YOUTUBE_POLL_INTERVAL_OFFLINE='):
-                new_lines.append(f'YOUTUBE_POLL_INTERVAL_OFFLINE={poll_offline}\n')
-                found_poll_offline = True
             else:
                 new_lines.append(line)
         if not found_key:
@@ -297,8 +287,6 @@ def create_youtube_tab(parent):
             new_lines.append(f'YOUTUBE_POLL_INTERVAL={poll}\n')
         if not found_poll_online:
             new_lines.append(f'YOUTUBE_POLL_INTERVAL_ONLINE={poll_online}\n')
-        if not found_poll_offline:
-            new_lines.append(f'YOUTUBE_POLL_INTERVAL_OFFLINE={poll_offline}\n')
         try:
             with open(env_path, 'w', encoding='utf-8') as f:
                 f.writelines(new_lines)
@@ -321,6 +309,27 @@ def create_youtube_tab(parent):
     btn_test.pack(side="left", padx=(0, 10))
     btn_save = ctk.CTkButton(btn_row, text="保存", font=BTN_FONT, command=save_youtube_settings)
     btn_save.pack(side="left")
+    import time
+    last_retrieve_time = [0]
+    retrieve_cooldown = 60  # クールタイム（秒）
+    label_retrieve_status = ctk.CTkLabel(youtube_tab, text="", font=DEFAULT_FONT)
+    def manual_retrieve():
+        now = time.time()
+        if now - last_retrieve_time[0] < retrieve_cooldown:
+            remain = int(retrieve_cooldown - (now - last_retrieve_time[0]))
+            label_retrieve_status.configure(text=f"再取得は{remain}秒後に可能です", text_color="orange")
+            return
+        try:
+            from service_monitor import trigger_youtube_manual_retrieve
+            trigger_youtube_manual_retrieve()
+            label_retrieve_status.configure(text="再取得リクエストを送信しました", text_color="green")
+        except Exception as e:
+            label_retrieve_status.configure(text=f"再取得リクエスト失敗: {e}", text_color="red")
+        last_retrieve_time[0] = now
+    # ボタン行に「再取得」ボタン追加
+    btn_retrieve = ctk.CTkButton(btn_row, text="再取得", font=BTN_FONT, command=manual_retrieve)
+    btn_retrieve.pack(side="left", padx=(10, 0))
+    label_retrieve_status.pack(anchor="w", padx=20, pady=(0, 10))
     btn_row.pack_configure(anchor="center")
     # --- appearance更新用 ---
     def update_appearance():

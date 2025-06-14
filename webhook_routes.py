@@ -11,7 +11,7 @@ webhook_bp = Blueprint('webhook', __name__)
 # --- 直近のRaidイベントを保存するための簡易メモリキャッシュ ---
 raid_event_cache = {}
 raid_event_cache_lock = threading.Lock()
-RAID_CACHE_EXPIRE_SEC = 30  # 30秒以内のRaidを有効とみなす
+RAID_CACHE_EXPIRE_SEC = 180  # 180秒以内のRaidを有効とみなす
 
 @webhook_bp.route('/favicon.ico')
 def favicon():
@@ -173,11 +173,19 @@ def handle_webhook():
 @webhook_bp.route("/api/tunnel_status", methods=["GET"])
 def api_tunnel_status():
     from tunnel_manager import get_tunnel_proc
+    import socket
     tunnel_proc = get_tunnel_proc()
+    # まず従来通りプロセス変数で判定
     if tunnel_proc and hasattr(tunnel_proc, 'poll') and tunnel_proc.poll() is None:
         return jsonify({"status": "UP"})
-    else:
-        return jsonify({"status": "DOWN"})
+    # プロセス変数がNoneでも、ポート疎通で判定（例: 3000番ポートがLISTENしているか）
+    try:
+        sock = socket.create_connection(("127.0.0.1", 3000), timeout=1)
+        sock.close()
+        return jsonify({"status": "UP"})
+    except Exception:
+        pass
+    return jsonify({"status": "DOWN"})
 
 @webhook_bp.route("/api/tunnel_ping", methods=["GET"])
 def api_tunnel_ping():

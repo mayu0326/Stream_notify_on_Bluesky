@@ -20,6 +20,13 @@ Stream notify on Bluesky
 # もし同梱されていない場合は、フリーソフトウェア財団までご請求ください。
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
+from dotenv import load_dotenv
+from utils.env_migrator import migrate_env
+load_dotenv("settings.env")
+
 from app_initializer import initialize_app
 from tunnel_manager import stop_tunnel_and_monitor
 from webhook_routes import webhook_bp, handle_404
@@ -58,6 +65,8 @@ SETTINGS_ENV_PATH = "settings.env"
 if not os.path.exists(SETTINGS_ENV_PATH):
     print("[ERROR] 設定ファイルが見つかりません。'settings.env' を作成してください。")
     sys.exit(1)
+else:
+    migrate_env()
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)

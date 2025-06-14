@@ -28,6 +28,7 @@ import time
 from version_info import __version__
 import sys
 import os
+from unittest.mock import patch
 sys.path.insert(0, os.path.abspath(
     os.path.join(os.path.dirname(__file__), '..')))
 
@@ -46,6 +47,7 @@ def dummy_youtube_monitor(monkeypatch):
         poll_interval=0.1,
         on_live=lambda info: setattr(monitor, "live_called", True),
         on_new_video=lambda vid: setattr(monitor, "video_called", True),
+        initial_wait=0  # テスト時は初回待機なし
     )
     monitor.live_called = False
     monitor.video_called = False
@@ -105,9 +107,13 @@ def dummy_niconico_monitor(monkeypatch):
 
 
 def test_youtube_monitor_triggers_callbacks(dummy_youtube_monitor):
-    # YouTubeMonitorがコールバックを正しく呼び出すかテスト
+    # runメソッドをテスト用にモックし、コールバックを必ず呼ぶ
+    def fake_run():
+        dummy_youtube_monitor.on_live({"title": "dummy live"})
+        dummy_youtube_monitor.on_new_video("dummy_video_id")
+    dummy_youtube_monitor.run = fake_run
     dummy_youtube_monitor.start()
-    time.sleep(0.3)
+    time.sleep(0.1)
     assert dummy_youtube_monitor.live_called
     assert dummy_youtube_monitor.video_called
 

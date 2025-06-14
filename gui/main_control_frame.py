@@ -178,7 +178,7 @@ class MainControlFrame(ctk.CTkFrame):
                 from logging_config import configure_logging
                 # Flaskアプリとtunnel_loggerを取得
                 app = getattr(main_mod, "app", None)
-                _, _, _, tunnel_logger = configure_logging(app)
+                _, _, _, tunnel_logger, youtube_logger, niconico_logger = configure_logging(app)
                 self.append_console("[STEP] 設定ファイル確認...")
                 self.update_step(0, "実行中", "blue")
                 # initialize_app

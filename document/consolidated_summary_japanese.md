@@ -45,3 +45,20 @@
     *   **templates/サブディレクトリ・__init__.txt:** テンプレートサブディレクトリ（niconico, twitch, youtube等）には__init__.txt（システム管理用）が必須。\
     削除・リネーム・空ディレクトリ化はCI/CD・自動テスト・運用時の動作不良の原因となるため厳禁。
     *   **All-ModuleList.mdやREADME.md:** モジュール・ファイルリストはA-Z順で整理し、保守性・CI/CD自動チェックの観点からも重要。
+    *   **YouTubeチャンネルID仕様:**
+    * **YouTube APIキー未設定時**は、UCから始まるチャンネルID（例: UCxxxx...）のみ**通知対象として許可**されます。
+    * APIキーを設定した場合は、**カスタムIDや@ハンドル形式**も利用可能です。
+    * GUI・CLIともに、**APIキー未入力時はUC形式ID以外**は保存・起動できません。
+    *   **機密ファイル管理:**
+    * `settings.env`や`settings.env.bak`等の**機密ファイル**は、`.gitignore`で必ず除外し、**Git履歴にも残さない運用**としてください。
+    * `settings.env.bak`等を誤ってコミットした場合は、`git filter-repo`等で**履歴から完全削除してください**。
+    * `settings.env.example`のみ**配布・共有可能**です。
+    *   **テンプレート・画像パス命名規則:**
+    * パスは必ず`templates/`・`images/`以降の相対パスで指定してください。**絶対パスやプロジェクトルートから**のパスは非推奨です。
+    * Bluesky通知テンプレートのパス（例: `BLUESKY_YT_NEW_VIDEO_TEMPLATE_PATH`）は、サービスごとに個別に設定できます。
+*   **settings.env自動マイグレーション:**
+    * 起動時に`utils/env_migrator.py`が自動で**不足項目の追加・不要項目のコメントアウト**等を行い、常に最新仕様に保ちます。
+    * 手動編集時も、次回起動時に自動で整合性が取られます。
+*   **.gitignore運用:**
+    * 機密ファイル（`settings.env`,`settings.env.bak`,`logs/`等）は必ず`.gitignore`で除外してください。
+    * 配布・共有時は`settings.env.example`のみ含めてください。
