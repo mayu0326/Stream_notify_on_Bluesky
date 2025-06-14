@@ -70,6 +70,7 @@ class YouTubeMonitor(Thread):
         self.last_video_id = None
         self.shutdown_event = shutdown_event if shutdown_event is not None else Event()
         self.initial_wait = initial_wait
+        self._manual_retrieve_flag = False
         _, _, _, _, youtube_logger, _ = configure_logging()
         self.logger = youtube_logger
         self.logger.info("YouTube監視モジュールを起動します。")
@@ -88,47 +89,98 @@ class YouTubeMonitor(Thread):
         if not video_ids:
             self.logger.debug("[YouTubeMonitor] fetch_video_details: video_idsが空です")
             return []
-        url = (
-            f"https://www.googleapis.com/youtube/v3/videos?id={','.join(video_ids)}&part=snippet,status,liveStreamingDetails&key={self.api_key}"
-        )
-        self.logger.debug(f"[YouTubeMonitor] fetch_video_details: APIリクエストURL: {url}")
-        resp = requests.get(url)
-        try:
-            data = resp.json()
-        except Exception as e:
-            self.logger.error(f"[YouTubeMonitor] fetch_video_details: JSONデコード失敗: {e}")
-            return []
-        self.logger.debug(f"[YouTubeMonitor] fetch_video_details: APIレスポンス: {data}")
-        result = []
-        for item in data.get("items", []):
-            snippet = item.get("snippet", {})
-            status = item.get("status", {})
-            live = item.get("liveStreamingDetails", {})
-            result.append({
-                "videoId": item["id"],
-                "title": snippet.get("title", "(タイトル不明)"),
-                "privacyStatus": status.get("privacyStatus", "unknown"),
-                "publishedAt": snippet.get("publishedAt", ""),
-                "scheduledStartTime": live.get("scheduledStartTime", ""),
-                "actualStartTime": live.get("actualStartTime", "")
-            })
-        self.logger.debug(f"[YouTubeMonitor] fetch_video_details: 取得詳細リスト: {result}")
-        return result
+        if self.api_key:
+            # APIキーがあれば詳細のみAPIで取得
+            url = (
+                f"https://www.googleapis.com/youtube/v3/videos?id={','.join(video_ids)}&part=snippet,status,liveStreamingDetails&key={self.api_key}"
+            )
+            self.logger.debug(f"[YouTubeMonitor] fetch_video_details: APIリクエストURL: {url}")
+            resp = requests.get(url)
+            try:
+                data = resp.json()
+            except Exception as e:
+                self.logger.error(f"[YouTubeMonitor] fetch_video_details: JSONデコード失敗: {e}")
+                return []
+            self.logger.debug(f"[YouTubeMonitor] fetch_video_details: APIレスポンス: {data}")
+            result = []
+            for item in data.get("items", []):
+                snippet = item.get("snippet", {})
+                status = item.get("status", {})
+                live = item.get("liveStreamingDetails", {})
+                result.append({
+                    "videoId": item["id"],
+                    "title": snippet.get("title", "(タイトル不明)"),
+                    "privacyStatus": status.get("privacyStatus", "unknown"),
+                    "publishedAt": snippet.get("publishedAt", ""),
+                    "scheduledStartTime": live.get("scheduledStartTime", ""),
+                    "actualStartTime": live.get("actualStartTime", "")
+                })
+            self.logger.debug(f"[YouTubeMonitor] fetch_video_details: 取得詳細リスト: {result}")
+            return result
+        else:
+            # APIキー未設定時はRSSから詳細取得
+            return self.fetch_video_details_from_rss(video_ids)
 
     def fetch_latest_video_ids(self, max_results=MAX_VIDEOS):
-        url = (
-            f"https://www.googleapis.com/youtube/v3/search?part=id&channelId={self.channel_id}&order=date&type=video&key={self.api_key}&maxResults={max_results}"
-        )
-        self.logger.debug(f"[YouTubeMonitor] fetch_latest_video_ids: APIリクエストURL: {url}")
-        resp = requests.get(url)
-        try:
-            data = resp.json()
-        except Exception as e:
-            self.logger.error(f"[YouTubeMonitor] fetch_latest_video_ids: JSONデコード失敗: {e}")
-            return []
-        self.logger.debug(f"[YouTubeMonitor] fetch_latest_video_ids: APIレスポンス: {data}")
-        ids = [item["id"].get("videoId") for item in data.get("items", []) if item["id"].get("videoId")]
-        self.logger.debug(f"[YouTubeMonitor] fetch_latest_video_ids: 取得IDリスト: {ids}")
+        # APIキー有無に関わらず、まずRSSでIDリストを取得（APIクォータ節約）
+        return self.fetch_latest_video_ids_from_rss(max_results)
+
+    def fetch_latest_video_ids_from_rss(self, max_results=MAX_VIDEOS):
+        """
+        YouTube公式RSSから動画IDリストを取得
+        https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID
+        """
+        import feedparser
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={self.channel_id}"
+        self.logger.info(f"[YouTubeMonitor] RSS取得: {rss_url}")
+        feed = feedparser.parse(rss_url)
+        ids = []
+        for entry in feed.entries[:max_results]:
+            # entry.yt_videoid で動画IDが取得できる
+            video_id = getattr(entry, "yt_videoid", None)
+            if video_id:
+                ids.append(video_id)
+        self.logger.info(f"[YouTubeMonitor] RSSから取得した動画IDリスト: {ids}")
+        return ids
+
+    def fetch_video_details_from_rss(self, video_ids):
+        """
+        RSSから動画詳細（タイトル・公開日など）を取得
+        """
+        import feedparser
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={self.channel_id}"
+        self.logger.info(f"[YouTubeMonitor] RSS取得: {rss_url}")
+        feed = feedparser.parse(rss_url)
+        details = []
+        for entry in feed.entries:
+            video_id = getattr(entry, "yt_videoid", None)
+            if video_id and video_id in video_ids:
+                details.append({
+                    "videoId": video_id,
+                    "title": getattr(entry, "title", "(タイトル不明)"),
+                    "privacyStatus": "public",  # RSSでは常にpublic扱い
+                    "publishedAt": getattr(entry, "published", ""),
+                    "scheduledStartTime": "",
+                    "actualStartTime": ""
+                })
+        self.logger.info(f"[YouTubeMonitor] RSSから取得した動画詳細: {details}")
+        return details
+
+    def fetch_live_video_ids_from_rss(self, max_results=MAX_VIDEOS):
+        """
+        YouTubeライブ配信専用RSSからライブ動画IDリストを取得
+        https://www.youtube.com/feeds/videos.xml?channel_id=CHANNEL_ID&eventType=live
+        """
+        import feedparser
+        rss_url = f"https://www.youtube.com/feeds/videos.xml?channel_id={self.channel_id}&eventType=live"
+        self.logger.info(f"[YouTubeMonitor] ライブRSS取得: {rss_url}")
+        feed = feedparser.parse(rss_url)
+        ids = []
+        for entry in feed.entries[:max_results]:
+            video_id = getattr(entry, "yt_videoid", None)
+            if video_id:
+                ids.append(video_id)
+        self.logger.info(f"[YouTubeMonitor] ライブRSSから取得した動画IDリスト: {ids}")
         return ids
 
     def run(self):
@@ -139,33 +191,48 @@ class YouTubeMonitor(Thread):
         latest_videos = self.fetch_video_details(latest_ids)
         self.save_latest_videos(latest_videos)
         for v in latest_videos:
-            self.logger.info(f"[YouTubeMonitor] {v['title']} ({v['videoId']}): {v['privacyStatus']}, publishedAt={v['publishedAt']}, scheduled={v['scheduledStartTime']}, actual={v['actualStartTime']}")
+            self.logger.info(f"[YouTubeMonitor] {v.get('title', '')} ({v.get('videoId', '')}): {v.get('privacyStatus', '')}, publishedAt={v.get('publishedAt', '')}, scheduled={v.get('scheduledStartTime', '')}, actual={v.get('actualStartTime', '')}")
         # --- 通常の監視ループ ---
-        poll_interval_online = int(os.getenv("YOUTUBE_POLL_INTERVAL_ONLINE", 30))
-        poll_interval_offline = int(os.getenv("YOUTUBE_POLL_INTERVAL_OFFLINE", 180))
+        # ポーリング間隔（分単位→秒、最小値制限）
+        poll_interval_min = int(os.getenv("YOUTUBE_POLL_INTERVAL", 60))
+        poll_interval_online_min = int(os.getenv("YOUTUBE_POLL_INTERVAL_ONLINE", 60))
+        poll_interval = max(poll_interval_min, 30) * 60  # 最小30分
+        poll_interval_online = max(poll_interval_online_min, 45) * 60  # 最小45分
         while not self.shutdown_event.is_set():
             try:
                 # 新着動画検出
                 prev_videos = self.load_latest_videos()
-                prev_ids = {v["videoId"] for v in prev_videos}
+                prev_ids = {v.get("videoId", "") for v in prev_videos}
                 new_ids = self.fetch_latest_video_ids(max_results=3)
                 added = [vid for vid in new_ids if vid not in prev_ids]
                 if added:
                     new_details = self.fetch_video_details(added)
                     for v in new_details:
-                        self.logger.info(f"[YouTubeMonitor] 新着動画検出: {v['title']} ({v['videoId']}): {v['privacyStatus']}, publishedAt={v['publishedAt']}, scheduled={v['scheduledStartTime']}, actual={v['actualStartTime']}")
+                        self.logger.info(f"[YouTubeMonitor] 新着動画検出: {v.get('title', '')} ({v.get('videoId', '')}): {v.get('privacyStatus', '')}, publishedAt={v.get('publishedAt', '')}, scheduled={v.get('scheduledStartTime', '')}, actual={v.get('actualStartTime', '')}")
                     # 最新リストを更新
                     all_videos = new_details + prev_videos
                     # 重複除去し最新MAX_VIDEOS件に
-                    uniq = {v["videoId"]: v for v in all_videos}
-                    sorted_videos = sorted(uniq.values(), key=lambda x: x["publishedAt"], reverse=True)[:MAX_VIDEOS]
-                    self.save_latest_videos(sorted_videos)
-                else:
-                    self.logger.info("[YouTubeMonitor] 新着動画なし")
+                    uniq = {v.get("videoId", ""): v for v in all_videos}
+                    latest = list(uniq.values())[:MAX_VIDEOS]
+                    self.save_latest_videos(latest)
+                # ポーリング間隔（ライブ中は短縮、通常は長め）
+                wait_time = poll_interval_online if self.last_live_status else poll_interval
+                self.logger.debug(f"[YouTubeMonitor] 次回監視まで{wait_time // 60}分待機")
+                # 即時再取得フラグ監視
+                waited = 0
+                while waited < wait_time:
+                    if self.shutdown_event.is_set():
+                        break
+                    if self._manual_retrieve_flag:
+                        self.logger.info("[YouTubeMonitor] 手動再取得リクエストを検知し即時実行")
+                        self._manual_retrieve_flag = False
+                        break
+                    sleep_time = min(5, wait_time - waited)
+                    self.shutdown_event.wait(sleep_time)
+                    waited += sleep_time
             except Exception as e:
-                self.logger.error(f"[YouTubeMonitor] エラー発生: {e}", exc_info=e)
-            wait_time = poll_interval_online
-            self.shutdown_event.wait(wait_time)
+                self.logger.error(f"[YouTubeMonitor] 監視ループ例外: {e}")
+                self.shutdown_event.wait(60)
 
     def check_live(self):
         """

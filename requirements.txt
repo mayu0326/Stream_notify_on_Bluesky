@@ -105,5 +105,5 @@ zope.interface>=5.5.0
 customtkinter>=5.2.0
 
 # --- その他 ---
-feedparser>=6.0.0
+feedparser
 pyperclip>=1.8.0

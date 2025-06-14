@@ -2,7 +2,10 @@ from youtube_monitor import YouTubeMonitor
 from niconico_monitor import NiconicoMonitor
 import os
 
+youtube_monitor_instance = None
+
 def start_youtube_monitor():
+    global youtube_monitor_instance
     def on_youtube_live(live_info):
         # NOTE: YouTubeMonitor から詳細情報dictが渡されるようになったので、
         # event_contextにそのまま渡すことでテンプレートでtitle等が利用可能。
@@ -60,7 +63,19 @@ def start_youtube_monitor():
         on_youtube_live, on_youtube_new_video
     )
     yt_monitor.start()
+    youtube_monitor_instance = yt_monitor
     return yt_monitor
+
+def trigger_youtube_manual_retrieve():
+    """
+    GUI等から即時再取得をトリガーするための関数
+    """
+    if youtube_monitor_instance:
+        if hasattr(youtube_monitor_instance, "manual_retrieve"):
+            youtube_monitor_instance.manual_retrieve()
+        else:
+            # runループ内でフラグ監視方式の場合はフラグを立てる
+            youtube_monitor_instance._manual_retrieve_flag = True
 
 def handle_youtube_offline(live_info):
     """

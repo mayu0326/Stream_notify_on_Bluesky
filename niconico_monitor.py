@@ -41,7 +41,8 @@ class NiconicoMonitor(Thread):
         # 監視対象ユーザーID、ポーリング間隔、コールバック関数を初期化
         super().__init__(daemon=True)
         self.user_id = user_id
-        self.poll_interval = poll_interval
+        self.poll_interval_min = max(int(poll_interval), 5)  # 最小5分
+        self.poll_interval = self.poll_interval_min * 60  # 秒に変換
         self.on_new_live = on_new_live
         self.on_new_video = on_new_video
         self.last_live_id = None
