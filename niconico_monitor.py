@@ -105,3 +105,21 @@ class NiconicoMonitor(Thread):
             context["live_id"] = entry.id
             context["stream_url"] = getattr(entry, "link", "")
         return context
+
+    def get_latest_live_id(self):
+        """
+        ユーザーの最新生放送IDを取得。
+        """
+        entry = self.get_latest_live_entry()
+        if entry:
+            return entry.id
+        return None
+
+    def get_latest_video_id(self):
+        """
+        ユーザーの最新動画IDを取得。
+        """
+        entry = self.get_latest_video_entry()
+        if entry:
+            return entry.id
+        return None

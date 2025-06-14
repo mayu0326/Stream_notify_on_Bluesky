@@ -1,10 +1,21 @@
-from flask import Blueprint, jsonify, request, current_app
+from flask import Blueprint, jsonify, request, current_app, send_from_directory
 import eventsub
 import bluesky  # BlueskyPosterはbluesky経由で参照
 from markupsafe import escape
 import os
+import threading
+import time
 
 webhook_bp = Blueprint('webhook', __name__)
+
+# --- 直近のRaidイベントを保存するための簡易メモリキャッシュ ---
+raid_event_cache = {}
+raid_event_cache_lock = threading.Lock()
+RAID_CACHE_EXPIRE_SEC = 30  # 30秒以内のRaidを有効とみなす
+
+@webhook_bp.route('/favicon.ico')
+def favicon():
+    return send_from_directory(os.path.join(os.path.dirname(__file__), 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @webhook_bp.route("/webhook", methods=["POST", "GET"])
 @webhook_bp.route("/webhook/", methods=["POST", "GET"])
@@ -44,14 +55,24 @@ def handle_webhook():
         notify_on_offline_str = os.getenv("NOTIFY_ON_TWITCH_OFFLINE", "False").lower()
         NOTIFY_ON_OFFLINE = notify_on_offline_str == "true"
         if subscription_type == "stream.online" and NOTIFY_ON_ONLINE:
+            # title, category_nameをTwitch APIで補完
+            title_val = event_data.get("title")
+            category_val = event_data.get("category_name")
+            # API補完が必要な場合のみ呼び出し
+            if not title_val or not category_val:
+                channel_info = eventsub.get_channel_information(event_data.get("broadcaster_user_id"))
+                if not title_val:
+                    title_val = channel_info.get("title") or f"{broadcaster_user_name_from_event}の配信"
+                if not category_val:
+                    category_val = channel_info.get("game_name") or ""
             event_context = {
                 "broadcaster_user_id": event_data.get("broadcaster_user_id"),
                 "broadcaster_user_login": broadcaster_user_login_from_event,
                 "broadcaster_user_name": broadcaster_user_name_from_event,
-                "title": event_data.get("title"),
-                "category_name": event_data.get("category_name"),
+                "title": title_val,
+                "category_name": category_val,
                 "game_id": event_data.get("game_id"),
-                "game_name": event_data.get("game_name", event_data.get("category_name")),
+                "game_name": event_data.get("game_name", category_val),
                 "language": event_data.get("language"),
                 "started_at": event_data.get("started_at"),
                 "type": event_data.get("type"),
@@ -59,11 +80,6 @@ def handle_webhook():
                 "tags": event_data.get("tags", []),
                 "stream_url": f"https://twitch.tv/{broadcaster_user_login_from_event}"
             }
-            required_fields = ["title", "category_name"]
-            missing_fields = [field for field in required_fields if not event_context.get(field)]
-            if missing_fields:
-                app.logger.warning(f"Webhook通知 (stream.online): 必須フィールドが不足しています: {', '.join(missing_fields)}. イベントデータ: {event_data}")
-                return jsonify({"error": "Missing title or category_name for stream.online event"}), 400
             try:
                 bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
                 success = bluesky_poster.post_stream_online(event_context=event_context, image_path=os.getenv("BLUESKY_IMAGE_PATH"))
@@ -74,12 +90,27 @@ def handle_webhook():
                 return jsonify({"error": "Internal server error during stream.online processing"}), 500
         elif subscription_type == "stream.offline":
             if NOTIFY_ON_OFFLINE:
+                import datetime
+                ended_at = datetime.datetime.now().isoformat()
+                # --- 直近のRaidイベントと突き合わせて判定 ---
+                raid_info = None
+                with raid_event_cache_lock:
+                    raid_entry = raid_event_cache.get(broadcaster_user_login_from_event)
+                    if raid_entry and (time.time() - raid_entry["timestamp"] <= RAID_CACHE_EXPIRE_SEC):
+                        raid_info = raid_entry
+                        # 使い終わったらキャッシュから削除
+                        del raid_event_cache[broadcaster_user_login_from_event]
                 event_context = {
                     "broadcaster_user_id": event_data.get("broadcaster_user_id"),
                     "broadcaster_user_login": broadcaster_user_login_from_event,
                     "broadcaster_user_name": broadcaster_user_name_from_event,
-                    "channel_url": f"https://twitch.tv/{broadcaster_user_login_from_event}"
+                    "channel_url": f"https://twitch.tv/{broadcaster_user_login_from_event}",
+                    "ended_at": ended_at,
                 }
+                if raid_info:
+                    event_context["to_broadcaster_user_name"] = raid_info["to_broadcaster_user_name"]
+                    event_context["to_broadcaster_user_login"] = raid_info["to_broadcaster_user_login"]
+                    event_context["to_stream_url"] = raid_info["to_stream_url"]
                 app.logger.info(f"stream.offlineイベント処理開始: {event_context.get('broadcaster_user_name')} ({event_context.get('broadcaster_user_login')})")
                 try:
                     bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
@@ -92,6 +123,40 @@ def handle_webhook():
             else:
                 app.logger.info(f"stream.offline通知は設定によりスキップされました: {broadcaster_user_login_from_event}")
                 return jsonify({"status": "skipped, offline notifications disabled"}), 200
+        elif subscription_type == "channel.raid":
+            # outgoing（自分がRaidを送った場合）のみ通知
+            if event_data.get("from_broadcaster_user_login") == broadcaster_user_login_from_event:
+                raid_to_name = event_data.get("to_broadcaster_user_name")
+                raid_to_login = event_data.get("to_broadcaster_user_login")
+                # --- Raidイベントをキャッシュに保存 ---
+                with raid_event_cache_lock:
+                    raid_event_cache[broadcaster_user_login_from_event] = {
+                        "to_broadcaster_user_name": raid_to_name,
+                        "to_broadcaster_user_login": raid_to_login,
+                        "to_stream_url": f"https://twitch.tv/{raid_to_login}" if raid_to_login else None,
+                        "timestamp": time.time()
+                    }
+                event_context = {
+                    "from_broadcaster_user_id": event_data.get("from_broadcaster_user_id"),
+                    "from_broadcaster_user_login": event_data.get("from_broadcaster_user_login"),
+                    "from_broadcaster_user_name": event_data.get("from_broadcaster_user_name"),
+                    "to_broadcaster_user_id": event_data.get("to_broadcaster_user_id"),
+                    "to_broadcaster_user_login": raid_to_login,
+                    "to_broadcaster_user_name": raid_to_name,
+                    "raid_url": f"https://twitch.tv/{raid_to_login}" if raid_to_login else None,
+                    "viewers": event_data.get("viewers"),
+                    "ended_at": None  # Raid時刻は省略またはサーバー時刻を入れてもOK
+                }
+                app.logger.info(f"channel.raid(outgoing)イベント処理開始: {event_context.get('from_broadcaster_user_name')} → {raid_to_name}")
+                try:
+                    bluesky_poster = bluesky.BlueskyPoster(os.getenv("BLUESKY_USERNAME"), os.getenv("BLUESKY_APP_PASSWORD"))
+                    # Raid用テンプレートを明示的に指定
+                    success = bluesky_poster.post_stream_offline(event_context=event_context, image_path=None, platform="twitch", template_path="templates/twitch/twitch_raid_template.txt")
+                    app.logger.info(f"Bluesky投稿試行 (channel.raid): {event_context.get('from_broadcaster_user_login')} → {raid_to_name}, 成功: {success}")
+                    return jsonify({"status": "success, raid notification posted" if success else "bluesky error, raid notification not posted"}), 200
+                except Exception as e:
+                    app.logger.error(f"Bluesky投稿エラー (channel.raid): {str(e)}", exc_info=True)
+                    return jsonify({"error": "Internal server error during channel.raid processing"}), 500
         if subscription_type == "stream.online" and not NOTIFY_ON_ONLINE:
             app.logger.info(f"stream.online通知は設定によりスキップされました: {broadcaster_user_login_from_event}")
             return jsonify({"status": "skipped, online notifications disabled"}), 200
