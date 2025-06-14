@@ -184,6 +184,7 @@ settings.env
 config.yml
 release/*
 old_app/*
-settings.env.example.bak
 TODO.md
 settings.env.bak
+settings.env
+settings.env.example.bak
