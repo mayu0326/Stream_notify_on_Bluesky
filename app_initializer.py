@@ -83,19 +83,19 @@ def initialize_app(app, tunnel_logger):
             if not all_subscriptions_successful:
                 logger.critical("必須EventSubサブスクリプションの作成に失敗したため、Twitch通知は無効化されます。")
     else:
-        logger.info("Twitch通知は無効または設定不足のためスキップされます。")
+        logger.info("Twitch通知は無効になっています。")
     # --- YouTube・ニコニコ監視スレッド起動 ---
     if youtube_ready:
         logger.info("YouTube監視モジュールを起動します。")
         start_youtube_monitor()
     else:
-        logger.info("YouTube通知は無効または設定不足のためスキップされます。")
+        logger.info("YouTube通知は無効になっています。")
     if nico_ready:
         if niconico_logger:
             niconico_logger.info("ニコニコ監視モジュールを起動します。")
         logger.info("ニコニコ監視モジュールを起動します。")
         start_niconico_monitor()
     else:
-        logger.info("ニコニコ通知は無効または設定不足のためスキップされます。")
+        logger.info("ニコニコ通知は無効になっています。")
     logger.info("アプリケーションの初期化が完了しました。")
     return True

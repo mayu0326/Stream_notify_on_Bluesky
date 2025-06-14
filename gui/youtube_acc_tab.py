@@ -144,20 +144,23 @@ def create_youtube_tab(parent):
             entry_channel.delete(0, "end")
             entry_channel.insert(0, channel_valid)
             channel = channel_valid
-        # APIキーは任意（空欄OK）
-        if key:
+        # APIキーは空欄または有効な形式のみ許可
+        if not key:
+            label_key_status.configure(text="(未入力可)", font=DESC_FONT, text_color="gray")
+        elif is_valid_api_key(key):
             label_key_status.configure(text="✓", font=DESC_FONT, text_color="green")
         else:
-            label_key_status.configure(text="(未入力可)", font=DESC_FONT, text_color="gray")
-        # --- ここから: APIキーが有効な場合のみバリデーション緩和 ---
-        if not is_valid_api_key(key):
-            # UC形式IDのみ許可
+            label_key_status.configure(text="✗ 無効なAPIキー形式", font=DESC_FONT, text_color="red")
+            ok = False
+        # チャンネルIDバリデーション
+        if not key:
+            # 空欄時はUC形式のみ許可
             if not (channel and channel_valid and channel_valid.startswith("UC")):
                 label_channel_status.configure(text="✗ UC形式IDのみ可", font=DESC_FONT, text_color="red")
                 ok = False
             else:
                 label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
-        else:
+        elif is_valid_api_key(key):
             # APIキーが有効な場合は緩和
             if channel and channel_valid and (channel_valid.startswith("UC") or channel_valid.startswith("@") or channel_valid.startswith("user/") or channel_valid.startswith("c/")):
                 label_channel_status.configure(text="✓", font=DESC_FONT, text_color="green")
