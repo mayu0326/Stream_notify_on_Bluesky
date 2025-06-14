@@ -21,7 +21,7 @@ Stream notify on Bluesky
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 from version_info import __version__
-from utils import get_settings_env_abspath
+from utils.utils import get_settings_env_abspath
 
 __author__ = "mayuneco(mayunya)"
 __copyright__ = "Copyright (C) 2025 mayuneco(mayunya)"

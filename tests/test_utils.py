@@ -9,7 +9,7 @@ import pytest
 import os
 import pytz  # pytzのインポート
 from unittest.mock import patch, MagicMock  # patchの追加
-from utils import (
+from utils.utils import (
     update_env_file_preserve_comments,
     rotate_secret_if_needed,
     format_datetime_filter  # format_datetime_filterの追加
@@ -91,7 +91,7 @@ def test_update_env_file_preserve_comments_multiple_updates(env_file):
 @pytest.fixture
 def mock_env_for_rotate(monkeypatch, env_file):
     # rotate_secret_if_needed 内の SETTINGS_ENV_PATH をテスト用パスに差し替え
-    monkeypatch.setattr("utils.SETTINGS_ENV_PATH", env_file)
+    monkeypatch.setattr("utils.utils.SETTINGS_ENV_PATH", env_file)
     # read_env と update_env_file_preserve_comments はそのままテスト対象の関数を使う
     # generate_secretはテストメソッド内で直接モック
     # os.getenv for TIMEZONE
@@ -101,7 +101,7 @@ def mock_env_for_rotate(monkeypatch, env_file):
 
 
 # utilsモジュールの中でsecrets.token_hexをモック
-@patch('utils.secrets.token_hex')
+@patch('utils.utils.secrets.token_hex')
 def test_rotate_secret_if_needed_no_secret(mock_secrets_token_hex, mock_env_for_rotate, caplog):
     # モックを設定して静的な値を返す
     mock_secrets_token_hex.return_value = "mocked_secret_key_123"
@@ -135,7 +135,7 @@ def test_rotate_secret_if_needed_no_secret(mock_secrets_token_hex, mock_env_for_
 
 
 # utilsモジュールの中でsecrets.token_hexをモック
-@patch('utils.secrets.token_hex')
+@patch('utils.utils.secrets.token_hex')
 def test_rotate_secret_if_needed_no_secret(mock_secrets_token_hex, mock_env_for_rotate, caplog):
     # モックを設定して静的な値を返す
     mock_secrets_token_hex.return_value = "mocked_secret_key_123"
@@ -146,7 +146,7 @@ def test_rotate_secret_if_needed_no_secret(mock_secrets_token_hex, mock_env_for_
 
 
 # このテストでもsecrets.token_hexをモック
-@patch('utils.secrets.token_hex')
+@patch('utils.utils.secrets.token_hex')
 def test_rotate_secret_if_needed_force_rotation(
         mock_secrets_token_hex, mock_env_for_rotate, caplog):
     mock_secrets_token_hex.return_value = "mocked_secret_key_123"  # モック値
@@ -213,8 +213,7 @@ class TestFormatDateTimeFilter:
         # システムタイムゾーンのテスト（実行環境依存なのでget_localzoneをモック）
         mock_local_tz = MagicMock()
         mock_local_tz.zone = "Europe/London"  # 例としてロンドン
-
-        with patch('utils.get_localzone', return_value=pytz.timezone("Europe/London")):
+        with patch('utils.utils.get_localzone', return_value=pytz.timezone("Europe/London")):
             monkeypatch.setenv("TIMEZONE", "system")
             iso_str_utc = "2023-10-27T10:00:00Z"
             # 期待値: 2023-10-27 11:00 BST（DST期間中）
@@ -249,7 +248,7 @@ class TestFormatDateTimeFilter:
 
     def test_get_localzone_returns_none(self, monkeypatch, caplog):
         monkeypatch.setenv("TIMEZONE", "system")
-        with patch('utils.get_localzone', return_value=None):
+        with patch('utils.utils.get_localzone', return_value=None):
             iso_str = "2023-10-27T10:00:00Z"
             result = format_datetime_filter(iso_str)
         assert "tzlocal.get_localzone()がNoneを返しました。UTCにフォールバックします。" in caplog.text
@@ -259,7 +258,7 @@ class TestFormatDateTimeFilter:
 
     def test_get_localzone_raises_exception(self, monkeypatch, caplog):
         monkeypatch.setenv("TIMEZONE", "system")
-        with patch('utils.get_localzone', side_effect=Exception("tzlocal failed")):
+        with patch('utils.utils.get_localzone', side_effect=Exception("tzlocal failed")):
             iso_str = "2023-10-27T10:00:00Z"
             result = format_datetime_filter(iso_str)
         assert "tzlocalでシステムタイムゾーン取得エラー: tzlocal failed。UTCにフォールバックします。" in caplog.text
@@ -281,7 +280,7 @@ pytestmark = pytest.mark.filterwarnings(
 ])
 def test_retry_mechanism(retry_count, expected_calls):
     """リトライメカニズムのテスト"""
-    from utils import retry_on_exception as retry_decorator
+    from utils.utils import retry_on_exception as retry_decorator
 
     # テスト用の失敗カウンター
     failure_count = 0

@@ -6,14 +6,14 @@ Stream notify on Bluesky
 """
 
 from datetime import datetime
-from utils import retry_on_exception, is_valid_url, notify_discord_error
+from utils.utils import retry_on_exception, is_valid_url, notify_discord_error
 # is_valid_url: URLがhttp/httpsで始まるか判定するユーティリティ関数。他モジュールからも利用されるため削除不可。
 import os
 import csv
 import logging
 from atproto import Client, exceptions
 from jinja2 import Environment, Template
-from utils import format_datetime_filter
+from utils.utils import format_datetime_filter
 from version_info import __version__
 
 __author__ = "mayuneco(mayunya)"
