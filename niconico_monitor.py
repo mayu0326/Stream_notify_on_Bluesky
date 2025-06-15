@@ -24,6 +24,7 @@ import time
 import feedparser
 from threading import Thread, Event
 from version_info import __version__
+from logging_config import configure_logging
 
 __author__ = "mayuneco(mayunya)"
 __copyright__ = "Copyright (C) 2025 mayuneco(mayunya)"
@@ -40,12 +41,15 @@ class NiconicoMonitor(Thread):
         # 監視対象ユーザーID、ポーリング間隔、コールバック関数を初期化
         super().__init__(daemon=True)
         self.user_id = user_id
-        self.poll_interval = poll_interval
+        self.poll_interval_min = max(int(poll_interval), 5)  # 最小5分
+        self.poll_interval = self.poll_interval_min * 60  # 秒に変換
         self.on_new_live = on_new_live
         self.on_new_video = on_new_video
         self.last_live_id = None
         self.last_video_id = None
         self.shutdown_event = shutdown_event if shutdown_event is not None else Event()
+        _, _, _, _, _, niconico_logger = configure_logging()
+        self.logger = niconico_logger
 
     def run(self):
         # スレッドのメインループ。shutdown_eventがセットされたら安全に終了
@@ -55,6 +59,7 @@ class NiconicoMonitor(Thread):
                 live_entry = self.get_latest_live_entry()
                 if live_entry and (not self.last_live_id or live_entry.id != self.last_live_id):
                     event_context = self._entry_to_context(live_entry, kind="live")
+                    self.logger.info(f"[NiconicoMonitor] 新着生放送検出: {getattr(live_entry, 'title', '')} ({getattr(live_entry, 'link', '')})")
                     self.on_new_live(event_context)
                     self.last_live_id = live_entry.id
 
@@ -62,11 +67,12 @@ class NiconicoMonitor(Thread):
                 video_entry = self.get_latest_video_entry()
                 if video_entry and (not self.last_video_id or video_entry.id != self.last_video_id):
                     event_context = self._entry_to_context(video_entry, kind="video")
+                    self.logger.info(f"[NiconicoMonitor] 新着動画検出: {getattr(video_entry, 'title', '')} ({getattr(video_entry, 'link', '')})")
                     self.on_new_video(event_context)
                     self.last_video_id = video_entry.id
 
             except Exception as e:
-                print(f"[NiconicoMonitor] エラー発生: {e}")
+                self.logger.error(f"[NiconicoMonitor] エラー発生: {e}", exc_info=e)
             self.shutdown_event.wait(self.poll_interval)
 
     def get_latest_live_entry(self):

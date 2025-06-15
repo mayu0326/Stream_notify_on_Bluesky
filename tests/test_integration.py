@@ -6,6 +6,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 import jinja2
 import utils
+import utils.utils
 from tunnel import start_tunnel, stop_tunnel
 
 
@@ -28,7 +29,7 @@ def test_client():
 
 
 # jinja2のグローバルフィルタにformat_datetime_filterを登録
-jinja2.filters.FILTERS['datetimeformat'] = utils.format_datetime_filter
+jinja2.filters.FILTERS['datetimeformat'] = utils.utils.format_datetime_filter
 
 
 # MainAppの依存性注入を適用し、mock_blueskyを正しく参照

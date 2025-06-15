@@ -35,7 +35,24 @@ __app_version__ = __version__
 # 住所: 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
 
 
+# --- シングルトン用キャッシュ ---
+_configure_logging_cache = {}
+_discord_status_logged = False  # Discord通知状態メッセージの重複防止用グローバル
+
+
 def configure_logging(app=None):
+    # シングルトン: 既に初期化済みならキャッシュを返す
+    global _configure_logging_cache
+    if not app and _configure_logging_cache:
+        return (
+            _configure_logging_cache["logger"],
+            _configure_logging_cache["app_logger_handlers"],
+            _configure_logging_cache["audit_logger"],
+            _configure_logging_cache["tunnel_logger"],
+            _configure_logging_cache["youtube_logger"],
+            _configure_logging_cache["niconico_logger"]
+        )
+
     # 環境設定ファイルの場所を指定し、環境変数を読み込む
     env_path = Path(__file__).parent / "settings.env"
     load_dotenv(dotenv_path=env_path)
@@ -44,7 +61,8 @@ def configure_logging(app=None):
     os.makedirs("logs", exist_ok=True)
 
     # ログレベルや保管日数の設定
-    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+    LOG_LEVEL_CONSOLE = os.getenv("LOG_LEVEL_CONSOLE", "INFO").upper()
+    LOG_LEVEL_FILE = os.getenv("LOG_LEVEL_FILE", "DEBUG").upper()
     LEVEL_MAP = {
         "DEBUG": logging.DEBUG,
         "INFO": logging.INFO,
@@ -52,7 +70,8 @@ def configure_logging(app=None):
         "ERROR": logging.ERROR,
         "CRITICAL": logging.CRITICAL,
     }
-    log_level = LEVEL_MAP.get(LOG_LEVEL, logging.INFO)
+    log_level_console = LEVEL_MAP.get(LOG_LEVEL_CONSOLE, logging.INFO)
+    log_level_file = LEVEL_MAP.get(LOG_LEVEL_FILE, logging.DEBUG)
 
     # Discord通知のログレベル設定
     DISCORD_NOTIFY_LEVEL = os.getenv(
@@ -91,7 +110,7 @@ def configure_logging(app=None):
 
     # アプリケーション用ロガーの作成
     logger = logging.getLogger("AppLogger")
-    logger.setLevel(log_level)
+    logger.setLevel(min(log_level_console, log_level_file))  # どちらか低い方でロガー自体のレベルを設定
     logger.propagate = False  # ルートロガーへの伝播を防止
 
     # 既存ハンドラの型を記録
@@ -109,7 +128,7 @@ def configure_logging(app=None):
             backupCount=log_retention_days,
             encoding="utf-8",
         )
-        info_file_handler.setLevel(log_level)  # 設定されたログレベルを使用
+        info_file_handler.setLevel(log_level_file)  # ファイル用ログレベル
         info_file_handler.setFormatter(error_format)
         logger.addHandler(info_file_handler)
     else:
@@ -134,7 +153,7 @@ def configure_logging(app=None):
     # コンソール出力用ハンドラ
     if logging.StreamHandler not in existing_handler_types:
         console_handler = logging.StreamHandler()
-        console_handler.setLevel(log_level)  # 設定されたログレベルを使用
+        console_handler.setLevel(log_level_console)  # コンソール用ログレベル
         console_handler.setFormatter(error_format)
         logger.addHandler(console_handler)
     else:
@@ -173,6 +192,7 @@ def configure_logging(app=None):
             print(msg)
     else:
         # ユーザー指定の日本語メッセージで出力
+        global _discord_status_logged
         if not discord_webhook_url or not discord_webhook_url.startswith(
                 "https://discord.com/api/webhooks/"):
             msg = "Discord通知はオフになっています。"
@@ -180,11 +200,16 @@ def configure_logging(app=None):
             msg = "Discord通知はオフになっています。"
         else:
             msg = "Discord通知はオンになっています。"
-        logger.info(msg)  # 設定上の選択なのでINFOで記録
+        # グローバルフラグで最初の1回だけINFOログに出力
+        if not _discord_status_logged:
+            logger.info(msg)  # 設定上の選択なのでINFOで記録
+            _discord_status_logged = True
 
     # tunnel.log用ロガーの設定
     tunnel_logger = logging.getLogger("tunnel.logger")
-    tunnel_logger.setLevel(log_level)
+    tunnel_logger.setLevel(log_level_file)
+    for h in tunnel_logger.handlers:
+        h.setLevel(log_level_file)
     tunnel_format = logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
     tunnel_file_handler = TimedRotatingFileHandler(
         "logs/tunnel.log",
@@ -193,16 +218,65 @@ def configure_logging(app=None):
         backupCount=log_retention_days,
         encoding="utf-8",
     )
-    tunnel_file_handler.setLevel(log_level)
+    tunnel_file_handler.setLevel(log_level_file)
     tunnel_file_handler.setFormatter(tunnel_format)
     tunnel_logger.addHandler(tunnel_file_handler)
+
+    # YouTube専用ロガー
+    youtube_logger = logging.getLogger("YouTubeLogger")
+    youtube_logger.setLevel(log_level_file)
+    for h in youtube_logger.handlers:
+        h.setLevel(log_level_file)
+    if not any(isinstance(h, TimedRotatingFileHandler) and getattr(h, 'baseFilename', '').endswith('youtube.log') for h in youtube_logger.handlers):
+        yt_file_handler = FlushTimedRotatingFileHandler(
+            "logs/youtube.log",
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        yt_file_handler.setLevel(log_level_file)
+        yt_file_handler.setFormatter(error_format)
+        youtube_logger.addHandler(yt_file_handler)
+
+    # Niconico専用ロガー
+    niconico_logger = logging.getLogger("NiconicoLogger")
+    niconico_logger.setLevel(log_level_file)
+    for h in niconico_logger.handlers:
+        h.setLevel(log_level_file)
+    if not any(isinstance(h, TimedRotatingFileHandler) and getattr(h, 'baseFilename', '').endswith('niconico.log') for h in niconico_logger.handlers):
+        nico_file_handler = FlushTimedRotatingFileHandler(
+            "logs/niconico.log",
+            when="D",
+            interval=1,
+            backupCount=log_retention_days,
+            encoding="utf-8",
+        )
+        nico_file_handler.setLevel(log_level_file)
+        nico_file_handler.setFormatter(error_format)
+        niconico_logger.addHandler(nico_file_handler)
 
     # Flaskアプリが渡された場合は、Flaskのロガーにも同じハンドラを追加
     if app is not None:
         app.logger.handlers.clear()  # Flaskデフォルトハンドラをクリア
         for h in app_logger_handlers:
             app.logger.addHandler(h)
-        app.logger.setLevel(log_level)
+        app.logger.setLevel(log_level_file)
         app.logger.propagate = False
 
-    return logger, app_logger_handlers, audit_logger, tunnel_logger
+    # --- シングルトンキャッシュに保存 ---
+    _configure_logging_cache = {
+        "logger": logger,
+        "app_logger_handlers": app_logger_handlers,
+        "audit_logger": audit_logger,
+        "tunnel_logger": tunnel_logger,
+        "youtube_logger": youtube_logger,
+        "niconico_logger": niconico_logger,
+    }
+    return logger, app_logger_handlers, audit_logger, tunnel_logger, youtube_logger, niconico_logger
+
+# --- flush付きハンドラ ---
+class FlushTimedRotatingFileHandler(TimedRotatingFileHandler):
+    def emit(self, record):
+        super().emit(record)
+        self.flush()

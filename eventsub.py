@@ -9,7 +9,7 @@ from tzlocal import get_localzone
 import pytz
 from pathlib import Path
 from dotenv import load_dotenv
-from utils import retry_on_exception
+from utils.utils import retry_on_exception
 import datetime
 import logging
 import time

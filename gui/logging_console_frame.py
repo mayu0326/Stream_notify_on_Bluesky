@@ -38,15 +38,26 @@ DEFAULT_FONT = "Yu Gothic UI", 15, "normal"
 class LoggingConsoleFrame(ctk.CTkFrame):
     def __init__(self, master=None):
         super().__init__(master)
-        self.var_log_level = ctk.StringVar()
+        self.var_log_level_console = ctk.StringVar()
+        self.var_log_level_file = ctk.StringVar()
         self.var_log_retention = ctk.StringVar()
         center_frame = ctk.CTkFrame(self, fg_color="transparent")
         center_frame.pack(expand=True, fill="both")
-        ctk.CTkLabel(center_frame, text="アプリケーションのログレベル:", font=DEFAULT_FONT).pack(fill="x", padx=40, pady=(30, 5), expand=True)
+        ctk.CTkLabel(center_frame, text="コンソール表示ログレベル:", font=DEFAULT_FONT).pack(fill="x", padx=40, pady=(30, 5), expand=True)
         ctk.CTkComboBox(
             center_frame,
             values=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
-            variable=self.var_log_level,
+            variable=self.var_log_level_console,
+            font=DEFAULT_FONT,
+            width=320,
+            state="readonly",
+            justify="center"
+        ).pack(fill="x", padx=80, pady=5, expand=True)
+        ctk.CTkLabel(center_frame, text="ログファイル出力ログレベル:", font=DEFAULT_FONT).pack(fill="x", padx=40, pady=(20, 5), expand=True)
+        ctk.CTkComboBox(
+            center_frame,
+            values=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
+            variable=self.var_log_level_file,
             font=DEFAULT_FONT,
             width=320,
             state="readonly",
@@ -83,42 +94,53 @@ class LoggingConsoleFrame(ctk.CTkFrame):
 
     def load_settings(self):
         config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
-        log_level = "INFO"
+        log_level_console = "INFO"
+        log_level_file = "DEBUG"
         log_retention = "14"
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:
                 for line in f:
-                    if line.startswith("LOG_LEVEL="):
-                        log_level = line.strip().split("=", 1)[1]
+                    if line.startswith("LOG_LEVEL_CONSOLE="):
+                        log_level_console = line.strip().split("=", 1)[1]
+                    elif line.startswith("LOG_LEVEL_FILE="):
+                        log_level_file = line.strip().split("=", 1)[1]
                     elif line.startswith("LOG_RETENTION_DAYS="):
                         log_retention = line.strip().split("=", 1)[1]
-        self.var_log_level.set(log_level)
+        self.var_log_level_console.set(log_level_console)
+        self.var_log_level_file.set(log_level_file)
         self.var_log_retention.set(log_retention)
 
     def save_log_settings(self):
         config_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../settings.env'))
-        log_level = self.var_log_level.get().strip()
+        log_level_console = self.var_log_level_console.get().strip()
+        log_level_file = self.var_log_level_file.get().strip()
         log_retention = self.var_log_retention.get().strip()
         lines = []
-        found_level = found_retention = False
+        found_console = found_file = found_retention = False
         if os.path.exists(config_path):
             with open(config_path, "r", encoding="utf-8") as f:
                 for line in f:
-                    if line.startswith("LOG_LEVEL="):
-                        lines.append(f"LOG_LEVEL={log_level}\n")
-                        found_level = True
+                    if line.startswith("LOG_LEVEL_CONSOLE="):
+                        lines.append(f"LOG_LEVEL_CONSOLE={log_level_console}\n")
+                        found_console = True
+                    elif line.startswith("LOG_LEVEL_FILE="):
+                        lines.append(f"LOG_LEVEL_FILE={log_level_file}\n")
+                        found_file = True
                     elif line.startswith("LOG_RETENTION_DAYS="):
                         lines.append(f"LOG_RETENTION_DAYS={log_retention}\n")
                         found_retention = True
-                    else:
+                    elif not line.startswith("LOG_LEVEL="):
                         lines.append(line)
-        if not found_level:
-            lines.append(f"LOG_LEVEL={log_level}\n")
+        if not found_console:
+            lines.append(f"LOG_LEVEL_CONSOLE={log_level_console}\n")
+        if not found_file:
+            lines.append(f"LOG_LEVEL_FILE={log_level_file}\n")
         if not found_retention:
             lines.append(f"LOG_RETENTION_DAYS={log_retention}\n")
         with open(config_path, "w", encoding="utf-8") as f:
             f.writelines(lines)
-        self.var_log_level.set(log_level)
+        self.var_log_level_console.set(log_level_console)
+        self.var_log_level_file.set(log_level_file)
         self.var_log_retention.set(log_retention)
         # messagebox.showinfo("保存", "保存しました")
         from gui.app_gui import show_ctk_info

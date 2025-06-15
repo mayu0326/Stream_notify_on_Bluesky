@@ -7,6 +7,9 @@ Stream notify on Bluesky
 import sys
 import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+from dotenv import load_dotenv
+from utils.env_migrator import migrate_env
+
 import customtkinter as ctk
 from gui.account_settings_frame import AccountSettingsFrame
 from gui.tunnel_connection import TunnelConnection
@@ -270,6 +273,7 @@ def is_first_setup():
 
 
 if __name__ == "__main__":
+    load_dotenv("../settings.env")
     if is_first_setup():
         # 設定ファイルがなければセットアップウィザードをダークモード(system)で起動
         ctk.set_appearance_mode("system")
@@ -282,4 +286,5 @@ if __name__ == "__main__":
         SetupWizard(master=root, on_finish=on_finish)
         root.mainloop()
     else:
+        migrate_env()
         MainWindow().mainloop()
